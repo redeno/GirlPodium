@@ -30,19 +30,25 @@
     #game-board {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
-        gap: 12px;
+        gap: 8px;
         justify-content: center;
         margin: 20px auto;
-        max-width: 500px;
+        max-width: 400px;
     }
     .cell {
-        width: 90px;
-        height: 90px;
+        width: 70px;
+        height: 70px;
         background: #001100;
-        border-radius: 15px;
+        border-radius: 12px;
         border: 2px solid #003300;
         position: relative;
         overflow: hidden;
+    }
+    .cell.locked {
+        background: #000800;
+        border-color: #001100;
+        opacity: 0.5;
+        pointer-events: none;
     }
     .item {
         width: 100%;
@@ -91,7 +97,7 @@
         justify-content: flex-start;
     }
 
-    /* Гифт-набор — CS:GO стиль */
+    /* Гифт-набор */
     #reel-container {
         position: relative;
         width: 460px;
@@ -103,18 +109,8 @@
         border: 6px solid #ffcc00;
         box-shadow: 0 0 40px rgba(255,204,0,0.6);
     }
-    #reel-wrapper {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-    }
-    #reel {
-        display: flex;
-        position: absolute;
-        left: 0;
-        top: 0;
-    }
+    #reel-wrapper { width: 100%; height: 100%; overflow: hidden; position: relative; }
+    #reel { display: flex; position: absolute; left: 0; top: 0; }
     .reel-item {
         width: 150px;
         height: 160px;
@@ -125,25 +121,13 @@
         box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
     }
     #pointer-line {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        width: 6px;
-        height: 100%;
+        position: absolute; top: 0; left: 50%; width: 6px; height: 100%;
         background: linear-gradient(to bottom, transparent, #ffcc00 50%, transparent);
-        box-shadow: 0 0 20px #ffcc00;
-        z-index: 10;
-        transform: translateX(-50%);
+        box-shadow: 0 0 20px #ffcc00; z-index: 10; transform: translateX(-50%);
     }
     #pointer-arrow {
-        position: absolute;
-        top: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 50px;
-        color: #ffcc00;
-        text-shadow: 0 0 15px #ff69b4;
-        z-index: 11;
+        position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+        font-size: 50px; color: #ffcc00; text-shadow: 0 0 15px #ff69b4; z-index: 11;
     }
 
     .reward-list { text-align: left; margin: 20px 0; flex-grow: 1; }
@@ -232,14 +216,12 @@ const ITEM_IMAGES = [
 ];
 
 const SPAWN_CHANCES = [0.70, 0.20, 0.07, 0.02, 0.005, 0.002, 0.001, 0.0005, 0.0003, 0.0001, 0.0001];
-
-// Опыт за появление предмета: 5, 10, 20, 40, 80, 160...
 const SPAWN_EXP = [5, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120];
 
 const GRID_SIZE = 25;
 const ENERGY_COST = 5;
 const MAX_ENERGY_BASE = 20;
-const ENERGY_REGEN_MS = 120000;
+const ENERGY_REGEN_MS = 120000; // 2 минуты
 
 let level = 1;
 let exp = 0;
@@ -250,20 +232,14 @@ let giftSetsCount = 0;
 let board = Array(GRID_SIZE).fill(null);
 let dragSrc = null;
 let todayClaimed = false;
+let lastRegenTime = Date.now(); // Время последнего регена
 
-const TODAY = new Date(); // Реальная текущая дата
+const TODAY = new Date();
 
 // === LocalStorage ===
 function saveGame() {
     const saveData = {
-        level,
-        exp,
-        expToNext,
-        maxEnergy,
-        energy,
-        giftSetsCount,
-        board,
-        todayClaimed,
+        level, exp, expToNext, maxEnergy, energy, giftSetsCount, board, todayClaimed,
         lastSaveDate: TODAY.toDateString()
     };
     localStorage.setItem('mergeGiftSave', JSON.stringify(saveData));
@@ -274,7 +250,6 @@ function loadGame() {
     if (!saved) return false;
 
     const data = JSON.parse(saved);
-
     level = data.level || 1;
     exp = data.exp || 0;
     expToNext = data.expToNext || 100;
@@ -284,7 +259,6 @@ function loadGame() {
     board = data.board || Array(GRID_SIZE).fill(null);
     todayClaimed = data.todayClaimed || false;
 
-    // Если день изменился — сбрасываем награду календаря
     if (data.lastSaveDate !== TODAY.toDateString()) {
         todayClaimed = false;
     }
@@ -292,13 +266,13 @@ function loadGame() {
     return true;
 }
 
-// Автосохранение после любого изменения
 function autoSave() {
     saveGame();
     updateLevel();
     updateEnergy();
     updateGiftCount();
     renderBoard();
+    updateBoardVisibility();
 }
 
 // === Доска ===
@@ -310,6 +284,16 @@ for (let i = 0; i < GRID_SIZE; i++) {
     cell.addEventListener('dragover', e => e.preventDefault());
     cell.addEventListener('drop', handleDrop);
     gameBoard.appendChild(cell);
+}
+
+function updateBoardVisibility() {
+    document.querySelectorAll('.cell').forEach((cell, i) => {
+        if (i >= 20 && level < 50) {
+            cell.classList.add('locked');
+        } else {
+            cell.classList.remove('locked');
+        }
+    });
 }
 
 function updateLevel() {
@@ -326,18 +310,23 @@ function updateGiftCount() {
     document.getElementById('gift-sets-button').disabled = giftSetsCount <= 0;
 }
 
-// Реген энергии
+// Реген энергии ТОЛЬКО во время активной сессии (не восстанавливается при перезаходе)
 setInterval(() => {
-    if (energy < maxEnergy) {
+    const now = Date.now();
+    if (now - lastRegenTime >= ENERGY_REGEN_MS && energy < maxEnergy) {
         energy++;
+        lastRegenTime = now;
         autoSave();
     }
-}, ENERGY_REGEN_MS);
+}, 5000); // Проверяем каждые 5 секунд
+
+// Сохраняем при выходе
+window.addEventListener('beforeunload', saveGame);
 
 // Спавн предмета
 document.getElementById('spawn-button').addEventListener('click', () => {
     if (energy < ENERGY_COST) return alert('Недостаточно энергии!');
-    const empty = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
+    const empty = board.map((v, i) => (v === null && (i < 20 || level >= 50)) ? i : null).filter(v => v !== null);
     if (empty.length === 0) return alert('Нет свободного места!');
 
     energy -= ENERGY_COST;
@@ -353,7 +342,7 @@ document.getElementById('spawn-button').addEventListener('click', () => {
     const idx = empty[Math.floor(Math.random() * empty.length)];
     board[idx] = lvl;
 
-    addExp(SPAWN_EXP[lvl]); // Опыт за спавн
+    addExp(SPAWN_EXP[lvl]);
     autoSave();
 });
 
@@ -367,6 +356,8 @@ function handleDrop(e) {
     e.preventDefault();
     const targetIdx = parseInt(e.target.dataset.index || e.target.parentNode.dataset.index);
     if (dragSrc === null || dragSrc === targetIdx) return;
+
+    if (targetIdx >= 20 && level < 50) return;
 
     const srcLvl = board[dragSrc];
     const tgtLvl = board[targetIdx];
@@ -419,6 +410,10 @@ function addExp(amount) {
             energy = Math.min(energy + 5, maxEnergy);
             updateEnergy();
             alert(`Уровень ${level}! +5 к максимуму энергии!`);
+        }
+        if (level === 50) {
+            alert(`Уровень 50! Открыт нижний ряд ячеек (21-25)!`);
+            updateBoardVisibility();
         }
         giftSetsCount += 1;
         updateGiftCount();
@@ -478,7 +473,7 @@ function openGiftSet() {
         `;
         addExp(expGained);
 
-        const empty = board.findIndex(c => c === null);
+        const empty = board.findIndex(c => c === null && (c < 20 || level >= 50));
         if (empty !== -1) {
             board[empty] = winLevel;
             renderBoard();
@@ -519,6 +514,7 @@ document.getElementById('rewards-preview-button').addEventListener('click', () =
         let text = `Уровень ${l}: `;
         if (l % 10 === 0) text += 'Новая картинка | ';
         if (l % 25 === 0) text += '+5 энергии | ';
+        if (l === 50) text += 'Открытие нижнего ряда | ';
         text += 'Гифт-набор';
 
         div.textContent = text;
@@ -590,7 +586,7 @@ function showCalendar() {
 
 // === Загрузка и старт ===
 if (loadGame()) {
-    console.log('Прогресс загружен из localStorage');
+    console.log('Прогресс загружен');
 } else {
     console.log('Новая игра');
 }
@@ -599,6 +595,8 @@ updateLevel();
 updateEnergy();
 updateGiftCount();
 renderBoard();
+updateBoardVisibility();
+lastRegenTime = Date.now(); // Начинаем отсчёт регена с текущего момента
 </script>
 </body>
 </html>
