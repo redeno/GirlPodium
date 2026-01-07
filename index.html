@@ -10,45 +10,68 @@
         background-color: #001a00;
         color: #ffcc00;
         margin: 0;
-        padding: 20px;
+        padding: 15px;
         text-align: center;
+        touch-action: manipulation;
     }
-    h1 { color: #ff69b4; text-shadow: 0 0 10px #ff1493; }
+    h1 {
+        font-size: 1.8em;
+        color: #ff69b4;
+        margin: 10px 0;
+        text-shadow: 0 0 10px #ff1493;
+    }
     .container {
-        max-width: 600px;
-        margin: 0 auto;
+        max-width: 100%;
         background: #002200;
-        border-radius: 20px;
-        padding: 20px;
+        border-radius: 16px;
+        padding: 15px;
         box-shadow: 0 0 20px rgba(255,204,0,0.3);
     }
-    #level-info { font-size: 20px; margin: 10px 0; }
-    #progress-bar { background: #003300; height: 25px; border-radius: 15px; overflow: hidden; margin: 10px 0; }
-    #progress { background: linear-gradient(to right, #ffcc00, #ff69b4); height: 100%; width: 0%; transition: width 0.5s; }
-    #energy-info { font-size: 18px; margin: 15px 0; }
-    #gift-count { font-size: 18px; margin: 10px 0; color: #ff69b4; }
+    #level-info { font-size: 1.2em; margin: 8px 0; }
+    #progress-bar {
+        background: #003300;
+        height: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+    }
+    #progress {
+        background: linear-gradient(to right, #ffcc00, #ff69b4);
+        height: 100%;
+        width: 0%;
+        transition: width 0.5s;
+    }
+    #energy-info {
+        font-size: 1.2em;
+        margin: 10px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
+    #energy-timer {
+        font-size: 0.9em;
+        color: #ff69b4;
+    }
+    #gift-count { font-size: 1.2em; margin: 10px 0; color: #ff69b4; }
+
     #game-board {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(4, 1fr); /* 4 столбца */
+        gap: 10px;
         justify-content: center;
         margin: 20px auto;
-        max-width: 400px;
+        max-width: 340px;
     }
     .cell {
-        width: 70px;
-        height: 70px;
+        width: 75px;
+        height: 75px;
         background: #001100;
         border-radius: 12px;
         border: 2px solid #003300;
         position: relative;
         overflow: hidden;
-    }
-    .cell.locked {
-        background: #000800;
-        border-color: #001100;
-        opacity: 0.5;
-        pointer-events: none;
+        touch-action: none;
     }
     .item {
         width: 100%;
@@ -57,32 +80,35 @@
         position: absolute;
         top: 0;
         left: 0;
-        draggable: true;
     }
     button {
         background: #ff69b4;
         color: white;
         border: none;
-        padding: 12px 25px;
-        font-size: 18px;
-        border-radius: 15px;
+        padding: 10px 18px;
+        font-size: 16px;
+        border-radius: 12px;
         cursor: pointer;
-        margin: 10px;
-        box-shadow: 0 5px 15px rgba(255,105,180,0.4);
+        margin: 8px 4px;
+        box-shadow: 0 4px 12px rgba(255,105,180,0.4);
     }
     button:hover { background: #ff1493; transform: scale(1.05); }
-    button:disabled { background: #666; cursor: not-allowed; opacity: 0.6; }
+    button:disabled { background: #555; opacity: 0.6; }
 
     .modal {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 100;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.9);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
     }
     .modal-content {
-        background: #002200; 
-        padding: 25px; 
-        border-radius: 20px; 
-        width: 90%; 
-        max-width: 550px;
+        background: #002200;
+        padding: 20px;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
         max-height: 85vh;
         overflow-y: auto;
         display: flex;
@@ -100,47 +126,90 @@
     /* Гифт-набор */
     #reel-container {
         position: relative;
-        width: 460px;
-        height: 160px;
-        margin: 40px auto;
+        width: 100%;
+        max-width: 420px;
+        height: 140px;
+        margin: 20px auto;
         background: #001100;
-        border-radius: 15px;
+        border-radius: 12px;
         overflow: hidden;
-        border: 6px solid #ffcc00;
-        box-shadow: 0 0 40px rgba(255,204,0,0.6);
+        border: 4px solid #ffcc00;
     }
-    #reel-wrapper { width: 100%; height: 100%; overflow: hidden; position: relative; }
-    #reel { display: flex; position: absolute; left: 0; top: 0; }
+    #reel-wrapper {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+    }
+    #reel {
+        display: flex;
+        position: absolute;
+        left: 0;
+        top: 0;
+        transition: transform 5.5s cubic-bezier(0.08, 0.82, 0.17, 1);
+    }
     .reel-item {
-        width: 150px;
-        height: 160px;
+        width: 140px;
+        height: 140px;
         flex-shrink: 0;
         object-fit: contain;
-        background: radial-gradient(circle at center, #004400 0%, #001100 100%);
-        border-right: 3px solid #002200;
-        box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        background: radial-gradient(#004400, #001100);
+        border-right: 2px solid #002200;
     }
     #pointer-line {
-        position: absolute; top: 0; left: 50%; width: 6px; height: 100%;
-        background: linear-gradient(to bottom, transparent, #ffcc00 50%, transparent);
-        box-shadow: 0 0 20px #ffcc00; z-index: 10; transform: translateX(-50%);
+        position: absolute;
+        top: 0; left: 50%;
+        width: 5px; height: 100%;
+        background: linear-gradient(transparent, #ffcc00, transparent);
+        transform: translateX(-50%);
+        z-index: 10;
     }
     #pointer-arrow {
-        position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
-        font-size: 50px; color: #ffcc00; text-shadow: 0 0 15px #ff69b4; z-index: 11;
+        position: absolute;
+        top: -20px; left: 50%;
+        transform: translateX(-50%);
+        font-size: 40px;
+        color: #ffcc00;
+        z-index: 11;
     }
 
     .reward-list { text-align: left; margin: 20px 0; flex-grow: 1; }
-    .reward-item { padding: 12px; background: #001100; border-radius: 10px; margin: 8px 0; }
+    .reward-item { 
+        padding: 15px; 
+        background: #001100; 
+        border-radius: 12px; 
+        margin: 10px 0; 
+        font-size: 1.1em;
+    }
     .current-level { background: #ff69b4 !important; color: white; font-weight: bold; }
     .past-level { opacity: 0.7; }
 
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 20px 0; }
-    .cal-day { padding: 12px; background: #001100; border-radius: 10px; }
-    .cal-today { background: #ff69b4 !important; color: white; cursor: pointer; }
+    .calendar-grid { 
+        display: grid; 
+        grid-template-columns: repeat(7, 1fr); 
+        gap: 8px; 
+        margin: 20px 0; 
+    }
+    .cal-day { 
+        padding: 12px; 
+        background: #001100; 
+        border-radius: 10px; 
+        font-size: 1em;
+    }
+    .cal-weekday {
+        font-weight: bold;
+        color: #ffcc00;
+        padding: 10px;
+    }
+    .cal-today { 
+        background: #ff69b4 !important; 
+        color: white; 
+        cursor: pointer; 
+        font-weight: bold;
+    }
     .cal-past { opacity: 0.4; }
     .cal-future { opacity: 0.3; }
-    .cal-claimed { background: #004400; }
+    .cal-claimed { background: #004400; color: #aaa; }
 </style>
 </head>
 <body>
@@ -149,7 +218,10 @@
     <h1>Merge Gift Game</h1>
     <div id="level-info">Уровень: 1 | Опыт: 0 / 100</div>
     <div id="progress-bar"><div id="progress"></div></div>
-    <div id="energy-info">Энергия: 20 / 20</div>
+    <div id="energy-info">
+        Энергия: <span id="energy-text">20 / 20</span>
+        <span id="energy-timer"></span>
+    </div>
     <div id="gift-count">Гифт-наборы: 0</div>
 
     <div id="game-board"></div>
@@ -171,7 +243,7 @@
                 <div id="reel"></div>
             </div>
         </div>
-        <div id="win-result" style="font-size:26px; margin:30px; color:#ffcc00; min-height:60px;"></div>
+        <div id="win-result" style="font-size:22px; margin:20px 0; min-height:50px; color:#ffcc00;"></div>
         <div class="modal-buttons">
             <button id="close-gift">Закрыть</button>
         </div>
@@ -192,7 +264,7 @@
 <!-- Календарь -->
 <div id="calendar-modal" class="modal">
     <div class="modal-content">
-        <h2 id="cal-month">Январь 2026</h2>
+        <h2>Календарь наград</h2>
         <div class="calendar-grid" id="cal-grid"></div>
         <div class="modal-buttons">
             <button id="close-calendar">Закрыть</button>
@@ -218,10 +290,10 @@ const ITEM_IMAGES = [
 const SPAWN_CHANCES = [0.70, 0.20, 0.07, 0.02, 0.005, 0.002, 0.001, 0.0005, 0.0003, 0.0001, 0.0001];
 const SPAWN_EXP = [5, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120];
 
-const GRID_SIZE = 25;
+const GRID_SIZE = 20; // 4 столбца × 5 строк
 const ENERGY_COST = 5;
 const MAX_ENERGY_BASE = 20;
-const ENERGY_REGEN_MS = 120000; // 2 минуты
+const ENERGY_REGEN_MS = 120000;
 
 let level = 1;
 let exp = 0;
@@ -231,8 +303,9 @@ let energy = maxEnergy;
 let giftSetsCount = 0;
 let board = Array(GRID_SIZE).fill(null);
 let dragSrc = null;
+let touchDragSrc = null;
 let todayClaimed = false;
-let lastRegenTime = Date.now(); // Время последнего регена
+let lastRegenTime = Date.now();
 
 const TODAY = new Date();
 
@@ -262,55 +335,30 @@ function loadGame() {
     if (data.lastSaveDate !== TODAY.toDateString()) {
         todayClaimed = false;
     }
-
     return true;
 }
 
 function autoSave() {
     saveGame();
     updateLevel();
-    updateEnergy();
+    document.getElementById('energy-text').textContent = `${energy} / ${maxEnergy}`;
     updateGiftCount();
     renderBoard();
-    updateBoardVisibility();
 }
 
-// === Доска ===
-const gameBoard = document.getElementById('game-board');
-for (let i = 0; i < GRID_SIZE; i++) {
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    cell.dataset.index = i;
-    cell.addEventListener('dragover', e => e.preventDefault());
-    cell.addEventListener('drop', handleDrop);
-    gameBoard.appendChild(cell);
+// === Таймер энергии ===
+function updateEnergyTimer() {
+    const remainingMs = ENERGY_REGEN_MS - (Date.now() - lastRegenTime);
+    if (energy >= maxEnergy || remainingMs <= 0) {
+        document.getElementById('energy-timer').textContent = '';
+        return;
+    }
+    const remainingSec = Math.ceil(remainingMs / 1000);
+    const min = Math.floor(remainingSec / 60);
+    const sec = remainingSec % 60;
+    document.getElementById('energy-timer').textContent = `(через ${min}:${sec.toString().padStart(2, '0')})`;
 }
 
-function updateBoardVisibility() {
-    document.querySelectorAll('.cell').forEach((cell, i) => {
-        if (i >= 20 && level < 50) {
-            cell.classList.add('locked');
-        } else {
-            cell.classList.remove('locked');
-        }
-    });
-}
-
-function updateLevel() {
-    document.getElementById('level-info').textContent = `Уровень: ${level} | Опыт: ${exp} / ${expToNext}`;
-    document.getElementById('progress').style.width = `${(exp / expToNext) * 100}%`;
-}
-
-function updateEnergy() {
-    document.getElementById('energy-info').textContent = `Энергия: ${energy} / ${maxEnergy}`;
-}
-
-function updateGiftCount() {
-    document.getElementById('gift-count').textContent = `Гифт-наборы: ${giftSetsCount}`;
-    document.getElementById('gift-sets-button').disabled = giftSetsCount <= 0;
-}
-
-// Реген энергии ТОЛЬКО во время активной сессии (не восстанавливается при перезаходе)
 setInterval(() => {
     const now = Date.now();
     if (now - lastRegenTime >= ENERGY_REGEN_MS && energy < maxEnergy) {
@@ -318,69 +366,76 @@ setInterval(() => {
         lastRegenTime = now;
         autoSave();
     }
-}, 5000); // Проверяем каждые 5 секунд
+    updateEnergyTimer();
+}, 1000);
 
-// Сохраняем при выходе
-window.addEventListener('beforeunload', saveGame);
+// === Доска 4×5 ===
+const gameBoard = document.getElementById('game-board');
+for (let i = 0; i < GRID_SIZE; i++) {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.dataset.index = i;
+    cell.addEventListener('dragover', e => e.preventDefault());
+    cell.addEventListener('drop', handleDrop);
 
-// Спавн предмета
-document.getElementById('spawn-button').addEventListener('click', () => {
-    if (energy < ENERGY_COST) return alert('Недостаточно энергии!');
-    const empty = board.map((v, i) => (v === null && (i < 20 || level >= 50)) ? i : null).filter(v => v !== null);
-    if (empty.length === 0) return alert('Нет свободного места!');
+    cell.addEventListener('touchstart', e => {
+        e.preventDefault();
+        const img = cell.querySelector('.item');
+        if (img) touchDragSrc = i;
+    });
 
-    energy -= ENERGY_COST;
+    cell.addEventListener('touchend', e => {
+        if (touchDragSrc === null) return;
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetCell = target?.closest('.cell');
+        if (targetCell) {
+            const targetIdx = parseInt(targetCell.dataset.index);
+            if (touchDragSrc !== targetIdx) mergeOrMove(touchDragSrc, targetIdx);
+        }
+        touchDragSrc = null;
+    });
 
-    let rand = Math.random();
-    let cum = 0;
-    let lvl = 0;
-    for (let i = 0; i < SPAWN_CHANCES.length; i++) {
-        cum += SPAWN_CHANCES[i];
-        if (rand <= cum) { lvl = i; break; }
-    }
-
-    const idx = empty[Math.floor(Math.random() * empty.length)];
-    board[idx] = lvl;
-
-    addExp(SPAWN_EXP[lvl]);
-    autoSave();
-});
-
-// Drag & Drop
-function handleDragStart(e) {
-    if (!e.target.classList.contains('item')) return;
-    dragSrc = parseInt(e.target.parentNode.dataset.index);
+    gameBoard.appendChild(cell);
 }
 
-function handleDrop(e) {
-    e.preventDefault();
-    const targetIdx = parseInt(e.target.dataset.index || e.target.parentNode.dataset.index);
-    if (dragSrc === null || dragSrc === targetIdx) return;
-
-    if (targetIdx >= 20 && level < 50) return;
-
-    const srcLvl = board[dragSrc];
-    const tgtLvl = board[targetIdx];
-
+function mergeOrMove(srcIdx, tgtIdx) {
+    const srcLvl = board[srcIdx];
+    const tgtLvl = board[tgtIdx];
     if (srcLvl !== null && tgtLvl !== null && srcLvl === tgtLvl) {
         let newLvl = srcLvl + 1;
         if (newLvl > 10) newLvl = 10;
-        board[targetIdx] = newLvl;
-        board[dragSrc] = null;
+        board[tgtIdx] = newLvl;
+        board[srcIdx] = null;
 
         let gainedExp = 10 * (srcLvl + 1);
         if (srcLvl === 9) gainedExp = 100;
         if (srcLvl === 10) {
             gainedExp = Math.floor(200 * (2 + Math.random()));
-            board[targetIdx] = null;
-            board[dragSrc] = null;
+            board[tgtIdx] = null;
+            board[srcIdx] = null;
         }
         addExp(gainedExp);
     } else if (tgtLvl === null) {
-        board[targetIdx] = srcLvl;
-        board[dragSrc] = null;
+        board[tgtIdx] = srcLvl;
+        board[srcIdx] = null;
     }
     autoSave();
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const targetIdx = parseInt(e.target.dataset.index || e.target.parentNode.dataset.index);
+    if (dragSrc !== null && dragSrc !== targetIdx) {
+        mergeOrMove(dragSrc, targetIdx);
+    }
+    dragSrc = null;
+}
+
+function handleDragStart(e) {
+    if (e.target.classList.contains('item')) {
+        dragSrc = parseInt(e.target.parentNode.dataset.index);
+    }
 }
 
 function renderBoard() {
@@ -397,6 +452,16 @@ function renderBoard() {
     });
 }
 
+function updateLevel() {
+    document.getElementById('level-info').textContent = `Уровень: ${level} | Опыт: ${exp} / ${expToNext}`;
+    document.getElementById('progress').style.width = `${(exp / expToNext) * 100}%`;
+}
+
+function updateGiftCount() {
+    document.getElementById('gift-count').textContent = `Гифт-наборы: ${giftSetsCount}`;
+    document.getElementById('gift-sets-button').disabled = giftSetsCount <= 0;
+}
+
 function addExp(amount) {
     exp += amount;
     while (exp >= expToNext) {
@@ -408,12 +473,8 @@ function addExp(amount) {
         if (level % 25 === 0) {
             maxEnergy += 5;
             energy = Math.min(energy + 5, maxEnergy);
-            updateEnergy();
+            autoSave();
             alert(`Уровень ${level}! +5 к максимуму энергии!`);
-        }
-        if (level === 50) {
-            alert(`Уровень 50! Открыт нижний ряд ячеек (21-25)!`);
-            updateBoardVisibility();
         }
         giftSetsCount += 1;
         updateGiftCount();
@@ -421,6 +482,28 @@ function addExp(amount) {
     }
     autoSave();
 }
+
+// Спавн
+document.getElementById('spawn-button').addEventListener('click', () => {
+    if (energy < ENERGY_COST) return alert('Недостаточно энергии!');
+    const empty = board.reduce((acc, val, idx) => val === null ? acc.concat(idx) : acc, []);
+    if (empty.length === 0) return alert('Нет свободного места!');
+
+    energy -= ENERGY_COST;
+
+    let rand = Math.random();
+    let cum = 0;
+    let lvl = 0;
+    for (let i = 0; i < SPAWN_CHANCES.length; i++) {
+        cum += SPAWN_CHANCES[i];
+        if (rand <= cum) { lvl = i; break; }
+    }
+
+    const idx = empty[Math.floor(Math.random() * empty.length)];
+    board[idx] = lvl;
+    addExp(SPAWN_EXP[lvl]);
+    autoSave();
+});
 
 // Гифт-наборы
 document.getElementById('gift-sets-button').addEventListener('click', () => {
@@ -439,8 +522,8 @@ function openGiftSet() {
     document.getElementById('win-result').textContent = 'Крутится...';
 
     const totalItems = 60;
-    const itemWidth = 150;
-    const containerWidth = 460;
+    const itemWidth = 140;
+    const containerWidth = 420;
     const centerOffset = containerWidth / 2 - itemWidth / 2;
 
     const items = [];
@@ -467,13 +550,13 @@ function openGiftSet() {
     setTimeout(() => {
         const expGained = SPAWN_EXP[winLevel];
         document.getElementById('win-result').innerHTML = `
-            <strong style="font-size:32px;">ПОЗДРАВЛЯЕМ!</strong><br><br>
-            Вы выиграли: <strong>Уровень ${winLevel + 1}</strong><br>
+            <strong style="font-size:28px;">ПОЗДРАВЛЯЕМ!</strong><br><br>
+            Выиграно: Уровень ${winLevel + 1}<br>
             +${expGained} опыта
         `;
         addExp(expGained);
 
-        const empty = board.findIndex(c => c === null && (c < 20 || level >= 50));
+        const empty = board.findIndex(v => v === null);
         if (empty !== -1) {
             board[empty] = winLevel;
             renderBoard();
@@ -496,7 +579,7 @@ document.getElementById('close-gift').addEventListener('click', () => {
     document.getElementById('gift-modal').style.display = 'none';
 });
 
-// Награды уровней
+// Награды уровней — улучшенный вид
 document.getElementById('rewards-preview-button').addEventListener('click', () => {
     document.getElementById('rewards-modal').style.display = 'flex';
     const list = document.getElementById('rewards-list');
@@ -511,13 +594,12 @@ document.getElementById('rewards-preview-button').addEventListener('click', () =
         if (l < level) div.classList.add('past-level');
         if (l === level) div.classList.add('current-level');
 
-        let text = `Уровень ${l}: `;
-        if (l % 10 === 0) text += 'Новая картинка | ';
-        if (l % 25 === 0) text += '+5 энергии | ';
-        if (l === 50) text += 'Открытие нижнего ряда | ';
-        text += 'Гифт-набор';
+        let text = `<strong>Уровень ${l}</strong><br>`;
+        if (l % 10 === 0) text += `• Новая картинка<br>`;
+        if (l % 25 === 0) text += `• +5 к максимуму энергии<br>`;
+        text += `• Гифт-набор`;
 
-        div.textContent = text;
+        div.innerHTML = text;
         list.appendChild(div);
     }
 });
@@ -526,7 +608,7 @@ document.getElementById('back-rewards').addEventListener('click', () => {
     document.getElementById('rewards-modal').style.display = 'none';
 });
 
-// Календарь
+// Календарь — исправлен (реальная дата, правильные дни недели)
 document.getElementById('calendar-button').addEventListener('click', showCalendar);
 document.getElementById('close-calendar').addEventListener('click', () => {
     document.getElementById('calendar-modal').style.display = 'none';
@@ -537,30 +619,41 @@ function showCalendar() {
     const grid = document.getElementById('cal-grid');
     grid.innerHTML = '';
 
-    const year = TODAY.getFullYear();
-    const month = TODAY.getMonth();
-    const todayDate = TODAY.getDate();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay() || 7;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const todayDate = now.getDate();
 
-    ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(day => {
-        const h = document.createElement('div');
-        h.textContent = day;
-        h.style.fontWeight = 'bold';
-        h.style.color = '#ffcc00';
-        grid.appendChild(h);
+    const firstDayOfMonth = new Date(year, month, 1);
+    const weekday = firstDayOfMonth.getDay(); // 0 = воскресенье
+    const startDay = weekday === 0 ? 6 : weekday - 1; // Понедельник = 0
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Дни недели
+    ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(dayName => {
+        const header = document.createElement('div');
+        header.classList.add('cal-weekday');
+        header.textContent = dayName;
+        grid.appendChild(header);
     });
 
-    for (let i = 1; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+    // Пустые клетки до первого дня
+    for (let i = 0; i < startDay; i++) {
+        grid.appendChild(document.createElement('div'));
+    }
 
+    // Дни месяца
     for (let day = 1; day <= daysInMonth; day++) {
         const cell = document.createElement('div');
         cell.classList.add('cal-day');
         cell.textContent = day;
 
-        if (day < todayDate) cell.classList.add('cal-past');
-        if (day > todayDate) cell.classList.add('cal-future');
-        if (day === todayDate) {
+        if (day < todayDate) {
+            cell.classList.add('cal-past');
+        } else if (day > todayDate) {
+            cell.classList.add('cal-future');
+        } else {
             cell.classList.add('cal-today');
             if (todayClaimed) {
                 cell.classList.add('cal-claimed');
@@ -592,11 +685,10 @@ if (loadGame()) {
 }
 
 updateLevel();
-updateEnergy();
+document.getElementById('energy-text').textContent = `${energy} / ${maxEnergy}`;
 updateGiftCount();
 renderBoard();
-updateBoardVisibility();
-lastRegenTime = Date.now(); // Начинаем отсчёт регена с текущего момента
+updateEnergyTimer();
 </script>
 </body>
 </html>
