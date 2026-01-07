@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модная Одевалка с Подиумом</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(to bottom, #ffe4f2, #fff0f8);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            text-align: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #ff69b4;
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 105, 180, 0.3);
+            padding: 30px;
+        }
+        button {
+            background: #ff69b4;
+            color: white;
+            border: none;
+            padding: 14px 34px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 20px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #ff1493;
+            transform: scale(1.05);
+        }
+        .hidden { display: none; }
+
+        /* Персонажи */
+        .characters {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0;
+        }
+        .character {
+            cursor: pointer;
+            border: 5px solid transparent;
+            border-radius: 15px;
+            transition: all 0.3s;
+            background: white;
+            padding: 10px;
+        }
+        .character:hover { transform: scale(1.05); }
+        .character.selected {
+            border-color: #ff69b4;
+            box-shadow: 0 0 25px #ff69b4;
+        }
+        .character img {
+            width: 160px;
+            height: 260px;
+            object-fit: contain;
+        }
+
+        /* Одевалка */
+        #character-canvas {
+            position: relative;
+            width: 340px;
+            height: 540px;
+            margin: 30px auto;
+            background: #f8f8f8;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+        }
+        #base { z-index: 1; }
+        #hair { z-index: 2; }
+        #hat { z-index: 3; }
+        #top { z-index: 4; }
+        #bottom { z-index: 5; }
+        #shoes { z-index: 6; }
+        #accessory { z-index: 7; }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .tab {
+            background: #ffe4f2;
+            padding: 12px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .tab:hover { background: #ffcce8; }
+        .tab.active {
+            background: #ff69b4;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Предметы */
+        .items {
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            max-width: 900px;
+        }
+        .items.active { display: flex; }
+        .item {
+            cursor: pointer;
+            width: 110px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .item:hover { transform: scale(1.1); }
+        .item img {
+            width: 100%;
+            height: 130px;
+            object-fit: contain;
+            background: #f0f0f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+        }
+        .item.selected img { border-color: #ff69b4; }
+
+        /* Экран подиума */
+        #podium-stage {
+            padding: 50px 20px;
+            animation: fadeIn 1.5s ease-in;
+        }
+        #podium-canvas {
+            position: relative;
+            width: 400px;
+            height: 620px;
+            margin: 40px auto;
+            background: linear-gradient(to bottom, #fff, #f0f0f0);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(255,105,180,0.4);
+            animation: slideUp 1s ease-out;
+        }
+        #podium-canvas .layer {
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-position: center;
+        }
+
+        .scores {
+            margin: 40px auto;
+            max-width: 600px;
+            background: #fff0f8;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .score-item {
+            font-size: 20px;
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(255,105,180,0.2);
+        }
+        #total-score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff1493;
+            margin: 30px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Модная Одевалка с Подиумом</h1>
+
+        <!-- Шаг 1: Выбор персонажа -->
+        <div id="step1">
+            <h2>Выберите персонажа</h2>
+            <div class="characters">
+                <div class="character" data-id="girl1">
+                    <img src="https://img.freepik.com/free-vector/cute-girl-cartoon-character_1308-141992.jpg" alt="Девочка 1">
+                </div>
+                <div class="character" data-id="girl2">
+                    <img src="https://img.freepik.com/free-vector/cute-girl-cartoon-character_1308-141993.jpg" alt="Девочка 2">
+                </div>
+                <div class="character" data-id="boy">
+                    <img src="https://img.freepik.com/free-vector/cute-boy-cartoon-character_1308-141994.jpg" alt="Мальчик">
+                </div>
+            </div>
+            <button id="to-dressing">Далее → Одевалка</button>
+        </div>
+
+        <!-- Шаг 2: Одевалка -->
+        <div id="step2" class="hidden">
+            <h2>Создай свой стиль!</h2>
+
+            <div id="character-canvas">
+                <div id="base" class="layer"></div>
+                <div id="hair" class="layer"></div>
+                <div id="hat" class="layer"></div>
+                <div id="top" class="layer"></div>
+                <div id="bottom" class="layer"></div>
+                <div id="shoes" class="layer"></div>
+                <div id="accessory" class="layer"></div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-category="hair">Причёски</div>
+                <div class="tab" data-category="hat">Шляпы</div>
+                <div class="tab" data-category="top">Верх / Худи</div>
+                <div class="tab" data-category="bottom">Низ / Платья</div>
+                <div class="tab" data-category="shoes">Обувь</div>
+                <div class="tab" data-category="accessory">Аксессуары</div>
+            </div>
+
+            <!-- Все категории предметов (как в предыдущей версии) -->
+            <div class="items active" data-category="hair">
+                <div class="item" data-layer="hair" data-url="https://png.pngtree.com/png-clipart/20230315/ourmid/pngtree-cartoon-hairstyles-for-boys-and-girls-png-image_6646862.png">
+                    <img src="https://png.pngtree.com/png-clipart/20230315/ourmid/pngtree-cartoon-hairstyles-for-boys-and-girls-png-image_6646862.png">
+                </div>
+                <div class="item" data-layer="hair" data-url="https://png.pngtree.com/png-clipart/20230315/ourmid/pngtree-cartoon-hairstyles-for-boys-and-girls-with-cute-long-hair-png-image_6646866.png">
+                    <img src="https://png.pngtree.com/png-clipart/20230315/ourmid/pngtree-cartoon-hairstyles-for-boys-and-girls-with-cute-long-hair-png-image_6646866.png">
+                </div>
+                <div class="item" data-layer="hair" data-url="https://png.pngtree.com/png-clipart/20230409/original/pngtree-cartoon-hairstyles-for-boys-and-girls-with-curly-hair-png-image_9040423.png">
+                    <img src="https://png.pngtree.com/png-clipart/20230409/original/pngtree-cartoon-hairstyles-for-boys-and-girls-with-curly-hair-png-image_9040423.png">
+                </div>
+            </div>
+
+            <div class="items" data-category="hat">
+                <div class="item" data-layer="hat" data-url="https://img.freepik.com/free-vector/blue-hat-sticker-white-background_1308-77068.jpg">
+                    <img src="https://img.freepik.com/free-vector/blue-hat-sticker-white-background_1308-77068.jpg">
+                </div>
+                <div class="item" data-layer="hat" data-url="https://p2.hiclipart.com/preview/373/592/41/cartoon-sun-fedora-sun-hat-cap-pencil-beach-clothing-costume-hat-png-clipart.jpg">
+                    <img src="https://p2.hiclipart.com/preview/373/592/41/cartoon-sun-fedora-sun-hat-cap-pencil-beach-clothing-costume-hat-png-clipart.jpg">
+                </div>
+            </div>
+
+            <div class="items" data-category="top">
+                <div class="item" data-layer="top" data-url="https://png.pngtree.com/png-vector/20220916/ourmid/pngtree-front-and-back-gray-hoodie-flat-cartoon-mockup-png-image_6181641.png">
+                    <img src="https://png.pngtree.com/png-vector/20220916/ourmid/pngtree-front-and-back-gray-hoodie-flat-cartoon-mockup-png-image_6181641.png">
+                </div>
+                <div class="item" data-layer="top" data-url="https://static.vecteezy.com/system/resources/previews/015/568/024/non_2x/hoodie-with-hood-blue-warm-clothing-cartoon-flat-illustration-sweatshirt-with-handles-vector.jpg">
+                    <img src="https://static.vecteezy.com/system/resources/previews/015/568/024/non_2x/hoodie-with-hood-blue-warm-clothing-cartoon-flat-illustration-sweatshirt-with-handles-vector.jpg">
+                </div>
+            </div>
+
+            <div class="items" data-category="bottom">
+                <div class="item" data-layer="bottom" data-url="https://img.favpng.com/4/24/15/skirt-clothing-cartoon-dress-png-favpng-K8PnKJ1pvXdHHEL1P4P0TUFG5.jpg">
+                    <img src="https://img.favpng.com/4/24/15/skirt-clothing-cartoon-dress-png-favpng-K8PnKJ1pvXdHHEL1P4P0TUFG5.jpg">
+                </div>
+                <div class="item" data-layer="bottom" data-url="https://png.pngtree.com/png-clipart/20230315/ourmid/pngtree-cartoon-skirt-for-girls-png-image_6646870.png">
+                    <img src="https://png.pngtree.com/png-clipart/20230315/ourmid/pngtree-cartoon-skirt-for-girls-png-image_6646870.png">
+                </div>
+            </div>
+
+            <div class="items" data-category="shoes">
+                <div class="item" data-layer="shoes" data-url="https://png.pngtree.com/png-clipart/20190115/ourmid/pngtree-female-illustration-cartoon-shoes-png-image_352971.jpg">
+                    <img src="https://png.pngtree.com/png-clipart/20190115/ourmid/pngtree-female-illustration-cartoon-shoes-png-image_352971.jpg">
+                </div>
+                <div class="item" data-layer="shoes" data-url="https://png.pngtree.com/png-clipart/20190118/ourmid/pngtree-cartoon-shoes-cartoon-girl-shoes-cartoon-shoes-pink-shoes-png-image_450212.jpg">
+                    <img src="https://png.pngtree.com/png-clipart/20190118/ourmid/pngtree-cartoon-shoes-cartoon-girl-shoes-cartoon-shoes-pink-shoes-png-image_450212.jpg">
+                </div>
+            </div>
+
+            <div class="items" data-category="accessory">
+                <div class="item" data-layer="accessory" data-url="https://static.vecteezy.com/system/resources/thumbnails/042/326/679/small/cartoon-heart-sunglasses-png.png">
+                    <img src="https://static.vecteezy.com/system/resources/thumbnails/042/326/679/small/cartoon-heart-sunglasses-png.png">
+                </div>
+                <div class="item" data-layer="accessory" data-url="https://www.clipartmax.com/png/small/237-2372202_jewelry-clipart-illustration-earrings-necklace-clipart.png">
+                    <img src="https://www.clipartmax.com/png/small/237-2372202_jewelry-clipart-illustration-earrings-necklace-clipart.png">
+                </div>
+            </div>
+
+            <button id="to-podium">Готово! На подиум →</button>
+        </div>
+
+        <!-- Шаг 3: Подиум -->
+        <div id="podium-stage" class="hidden">
+            <h2>Твой образ на подиуме! ✨</h2>
+
+            <div id="podium-canvas">
+                <div id="podium-base" class="layer"></div>
+                <div id="podium-hair" class="layer"></div>
+                <div id="podium-hat" class="layer"></div>
+                <div id="podium-top" class="layer"></div>
+                <div id="podium-bottom" class="layer"></div>
+                <div id="podium-shoes" class="layer"></div>
+                <div id="podium-accessory" class="layer"></div>
+            </div>
+
+            <div class="scores">
+                <div class="score-item" id="color-score">Сочетание цветов: ?/10</div>
+                <div class="score-item" id="material-score">Материалы и текстуры: ?/10</div>
+                <div class="score-item" id="style-score">Стиль и тема: ?/10</div>
+                <div id="total-score">Общий рейтинг: ?/10</div>
+            </div>
+
+            <button id="play-again">Играть снова</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedCharacter = null;
+
+        // Выбор персонажа
+        document.querySelectorAll('#step1 .character').forEach(el => {
+            el.addEventListener('click', () => {
+                document.querySelectorAll('#step1 .character').forEach(c => c.classList.remove('selected'));
+                el.classList.add('selected');
+                selectedCharacter = el.querySelector('img').src;
+            });
+        });
+
+        document.getElementById('to-dressing').addEventListener('click', () => {
+            if (!selectedCharacter) return alert('Выбери персонажа!');
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            document.getElementById('base').style.backgroundImage = `url(${selectedCharacter})`;
+        });
+
+        // Вкладки
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.items').forEach(i => i.classList.remove('active'));
+                document.querySelector(`.items[data-category="${tab.dataset.category}"]`).classList.add('active');
+            });
+        });
+
+        // Выбор предмета одежды
+        document.querySelectorAll('.item').forEach(item => {
+            item.addEventListener('click', () => {
+                const layer = item.dataset.layer;
+                const url = item.dataset.url;
+
+                // Подсветка выбранного
+                document.querySelectorAll(`.item[data-layer="${layer}"]`).forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+
+                // Надеваем на персонажа
+                document.getElementById(layer).style.backgroundImage = `url(${url})`;
+            });
+        });
+
+        // Переход на подиум
+        document.getElementById('to-podium').addEventListener('click', () => {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('podium-stage').classList.remove('hidden');
+
+            // Копируем все слои на подиум
+            const layers = ['base', 'hair', 'hat', 'top', 'bottom', 'shoes', 'accessory'];
+            layers.forEach(layer => {
+                const style = document.getElementById(layer).style.backgroundImage;
+                document.getElementById(`podium-${layer}`).style.backgroundImage = style;
+            });
+
+            // Расчёт оценки (простая логика)
+            calculateAndShowScore();
+        });
+
+        // Простая система оценки
+        function calculateAndShowScore() {
+            let colorScore = 5;
+            let materialScore = 5;
+            let styleScore = 5;
+
+            // Пример: если надето больше 3 предметов — бонус
+            const wornItems = ['hair', 'hat', 'top', 'bottom', 'shoes', 'accessory'].filter(id => 
+                document.getElementById(id).style.backgroundImage !== ''
+            ).length;
+
+            if (wornItems >= 4) styleScore += 3;
+            if (wornItems >= 5) colorScore += 2;
+            if (wornItems === 6) materialScore += 3;
+
+            // Случайный элемент для разнообразия
+            colorScore += Math.floor(Math.random() * 3);
+            materialScore += Math.floor(Math.random() * 3);
+            styleScore += Math.floor(Math.random() * 3);
+
+            // Ограничение до 10
+            colorScore = Math.min(10, colorScore);
+            materialScore = Math.min(10, materialScore);
+            styleScore = Math.min(10, styleScore);
+
+            const total = Math.round((colorScore + materialScore + styleScore) / 3);
+
+            document.getElementById('color-score').textContent = `Сочетание цветов: ${colorScore}/10`;
+            document.getElementById('material-score').textContent = `Материалы и текстуры: ${materialScore}/10`;
+            document.getElementById('style-score').textContent = `Стиль и тема: ${styleScore}/10`;
+            document.getElementById('total-score').textContent = `Общий рейтинг: ${total}/10 ⭐`;
+        }
+
+        // Играть снова
+        document.getElementById('play-again').addEventListener('click', () => {
+            location.reload();
+        });
+    </script>
+</body>
+</html>
