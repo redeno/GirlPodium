@@ -1,759 +1,105 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Merge Gift Game</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #001a00;
-        color: #ffcc00;
-        margin: 0;
-        padding: 15px;
-        text-align: center;
-        touch-action: manipulation;
-    }
-    h1 {
-        font-size: 1.8em;
-        color: #ff69b4;
-        margin: 10px 0;
-        text-shadow: 0 0 10px #ff1493;
-    }
-    .container {
-        max-width: 100%;
-        background: #002200;
-        border-radius: 16px;
-        padding: 15px;
-        box-shadow: 0 0 20px rgba(255,204,0,0.3);
-    }
-    #level-info { font-size: 1.2em; margin: 8px 0; }
-    #progress-bar {
-        background: #003300;
-        height: 20px;
-        border-radius: 10px;
-        overflow: hidden;
-        margin: 10px 0;
-    }
-    #progress {
-        background: linear-gradient(to right, #ffcc00, #ff69b4);
-        height: 100%;
-        width: 0%;
-        transition: width 0.5s;
-    }
-    #energy-info {
-        font-size: 1.2em;
-        margin: 10px 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-    }
-    #energy-timer {
-        font-size: 0.9em;
-        color: #ff69b4;
-    }
-    #gift-count { font-size: 1.2em; margin: 10px 0; color: #ff69b4; }
-
-    #game-board {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        justify-content: center;
-        margin: 20px auto;
-        max-width: 340px;
-    }
-    .cell {
-        width: 75px;
-        height: 75px;
-        background: #001100;
-        border-radius: 12px;
-        border: 2px solid #003300;
-        position: relative;
-        overflow: hidden;
-        touch-action: none;
-    }
-    .cell.selected {
-        border: 4px solid #ff69b4;
-        box-shadow: 0 0 20px #ff69b4;
-    }
-    .item {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
-
-    /* Панель обмена */
-    .exchange-panel {
-        margin: 15px auto;
-        max-width: 340px;
-        padding: 12px;
-        background: #001100;
-        border-radius: 12px;
-        display: none;
-        font-size: 1.1em;
-        border: 2px solid #ff69b4;
-    }
-    .exchange-panel.active {
-        display: block;
-    }
-
-    /* Кнопки в строку по центру с прокруткой */
-    .buttons-row {
-        display: flex;
-        overflow-x: auto;
-        gap: 10px;
-        padding: 10px 0;
-        justify-content: center;
-        max-width: 100%;
-        scrollbar-width: none;
-    }
-    .buttons-row::-webkit-scrollbar {
-        display: none;
-    }
-    .buttons-row button {
-        flex-shrink: 0;
-        white-space: nowrap;
-    }
-
-    button {
-        background: #ff69b4;
-        color: white;
-        border: none;
-        padding: 10px 18px;
-        font-size: 16px;
-        border-radius: 12px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(255,105,180,0.4);
-    }
-    button:hover { background: #ff1493; transform: scale(1.05); }
-    button:disabled { background: #555; opacity: 0.6; }
-
-    .modal {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.9);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 100;
-    }
-    .modal-content {
-        background: #002200;
-        padding: 20px;
-        border-radius: 16px;
-        width: 90%;
-        max-width: 500px;
-        max-height: 85vh;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-    }
-    .modal-buttons {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-    }
-    .modal-buttons-left {
-        justify-content: flex-start;
-    }
-    .back-top {
-        margin-bottom: 15px;
-    }
-
-    /* Гифт-набор */
-    #reel-container {
-        position: relative;
-        width: 100%;
-        max-width: 420px;
-        height: 140px;
-        margin: 20px auto;
-        background: #001100;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 4px solid #ffcc00;
-    }
-    #reel-wrapper { width: 100%; height: 100%; overflow: hidden; position: relative; }
-    #reel { display: flex; position: absolute; left: 0; top: 0; transition: transform 5.5s cubic-bezier(0.08, 0.82, 0.17, 1); }
-    .reel-item {
-        width: 140px;
-        height: 140px;
-        flex-shrink: 0;
-        object-fit: contain;
-        background: radial-gradient(#004400, #001100);
-        border-right: 2px solid #002200;
-    }
-    #pointer-line {
-        position: absolute; top: 0; left: 50%; width: 5px; height: 100%;
-        background: linear-gradient(transparent, #ffcc00, transparent);
-        transform: translateX(-50%);
-        z-index: 10;
-    }
-    #pointer-arrow {
-        position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
-        font-size: 40px; color: #ffcc00; z-index: 11;
-    }
-
-    .reward-list { text-align: left; margin: 20px 0; flex-grow: 1; }
-    .reward-item { 
-        padding: 15px; 
-        background: #001100; 
-        border-radius: 12px; 
-        margin: 10px 0; 
-        font-size: 1.1em;
-    }
-    .current-level { background: #ff69b4 !important; color: white; font-weight: bold; }
-    .past-level { opacity: 0.7; }
-
-    .calendar-grid { 
-        display: grid; 
-        grid-template-columns: repeat(7, 1fr); 
-        gap: 8px; 
-        margin: 20px 0; 
-    }
-    .cal-day { 
-        padding: 12px; 
-        background: #001100; 
-        border-radius: 10px; 
-        font-size: 1em;
-    }
-    .cal-weekday {
-        font-weight: bold;
-        color: #ffcc00;
-        padding: 10px;
-    }
-    .cal-today { 
-        background: #ff69b4 !important; 
-        color: white; 
-        cursor: pointer; 
-        font-weight: bold;
-    }
-    .cal-past { opacity: 0.4; }
-    .cal-future { opacity: 0.3; }
-    .cal-claimed { background: #004400; color: #aaa; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Найди предметы!</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #game-container {
+            text-align: center;
+        }
+        #image-map {
+            max-width: 100%;
+            height: auto;
+        }
+        #item-list {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .item {
+            margin: 5px;
+            padding: 5px;
+            background-color: #ddd;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .found {
+            text-decoration: line-through;
+            color: green;
+        }
+        #message {
+            margin-top: 10px;
+            font-size: 20px;
+            color: green;
+        }
+    </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Merge Gift Game</h1>
-    <div id="level-info">Уровень: 1 | Опыт: 0 / 100</div>
-    <div id="progress-bar"><div id="progress"></div></div>
-    <div id="energy-info">
-        Энергия: <span id="energy-text">20 / 20</span>
-        <span id="energy-timer"></span>
-    </div>
-    <div id="gift-count">Гифт-наборы: 0</div>
-
-    <div id="game-board"></div>
-
-    <div class="exchange-panel" id="exchange-panel">
-        Выбран предмет уровня <span id="selected-level"></span>
-        <button id="exchange-button">Обменять на <span id="exchange-energy"></span> энергии</button>
-    </div>
-
-    <div class="buttons-row">
-        <button id="spawn-button">Спавн предмета (5 энергии)</button>
-        <button id="gift-sets-button" disabled>Гифт-наборы</button>
-        <button id="rewards-preview-button">Награды уровней</button>
-        <button id="calendar-button">Календарь</button>
-    </div>
-</div>
-
-<!-- Гифт-набор -->
-<div id="gift-modal" class="modal">
-    <div class="modal-content">
-        <h2 style="color:#ffcc00;">Открываем гифт-набор!</h2>
-        <div id="reel-container">
-            <div id="pointer-arrow">▼</div>
-            <div id="pointer-line"></div>
-            <div id="reel-wrapper">
-                <div id="reel"></div>
-            </div>
+    <div id="game-container">
+        <h1>Найди 10 предметов на картинке!</h1>
+        <img id="image-map" src="https://www.shutterstock.com/shutterstock/photos/2156066907/display_1500/stock-vector-find-17-items-in-the-picture-hidden-object-puzzle-the-children-built-a-big-sand-castle-funny-2156066907.jpg" usemap="#object-map" alt="Сцена с песочным замком">
+        <map name="object-map">
+            <!-- Примерные зоны кликов (координаты в px, от левого верхнего угла, для изображения 1500x1167). Замени на реальные для своего фото -->
+            <area shape="rect" coords="100,50,200,150" href="#" onclick="findItem('kite'); return false;" alt="kite">
+            <area shape="rect" coords="1300,100,1400,200" href="#" onclick="findItem('penguin'); return false;" alt="penguin">
+            <area shape="rect" coords="1100,150,1200,250" href="#" onclick="findItem('dinosaur'); return false;" alt="dinosaur">
+            <area shape="rect" coords="1000,200,1100,300" href="#" onclick="findItem('teddy bear'); return false;" alt="teddy bear">
+            <area shape="rect" coords="1150,250,1250,350" href="#" onclick="findItem('diamond'); return false;" alt="diamond">
+            <area shape="rect" coords="1250,700,1350,800" href="#" onclick="findItem('elephant'); return false;" alt="elephant">
+            <area shape="rect" coords="1300,800,1400,900" href="#" onclick="findItem('pinwheel'); return false;" alt="pinwheel">
+            <area shape="rect" coords="1400,950,1500,1050" href="#" onclick="findItem('panda'); return false;" alt="panda">
+            <area shape="rect" coords="1350,1000,1450,1100" href="#" onclick="findItem('pig'); return false;" alt="pig">
+            <area shape="rect" coords="300,800,400,900" href="#" onclick="findItem('shovel'); return false;" alt="shovel">
+        </map>
+        <div id="item-list">
+            <h2>Список предметов:</h2>
+            <span class="item" id="kite">Воздушный змей</span>
+            <span class="item" id="penguin">Пингвин</span>
+            <span class="item" id="dinosaur">Динозавр</span>
+            <span class="item" id="teddy bear">Плюшевый мишка</span>
+            <span class="item" id="diamond">Алмаз</span>
+            <span class="item" id="elephant">Слон</span>
+            <span class="item" id="pinwheel">Вертушка</span>
+            <span class="item" id="panda">Панда</span>
+            <span class="item" id="pig">Свинья</span>
+            <span class="item" id="shovel">Лопата</span>
         </div>
-        <div id="win-result" style="font-size:22px; margin:20px 0; min-height:50px; color:#ffcc00;"></div>
-        <div class="modal-buttons">
-            <button id="close-gift">Закрыть</button>
-        </div>
+        <div id="message"></div>
     </div>
-</div>
 
-<!-- Награды уровней -->
-<div id="rewards-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-buttons modal-buttons-left back-top">
-            <button id="back-rewards-top">◄ Назад</button>
-        </div>
-        <h2>Награды уровней</h2>
-        <div class="reward-list" id="rewards-list"></div>
-        <div class="modal-buttons modal-buttons-left">
-            <button id="back-rewards">◄ Назад</button>
-        </div>
-    </div>
-</div>
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Полноэкранный режим
 
-<!-- Календарь -->
-<div id="calendar-modal" class="modal">
-    <div class="modal-content">
-        <h2>Календарь наград</h2>
-        <div class="calendar-grid" id="cal-grid"></div>
-        <div class="modal-buttons">
-            <button id="close-calendar">Закрыть</button>
-        </div>
-    </div>
-</div>
+        let foundCount = 0;
+        const totalItems = 10;
 
-<script>
-const ITEM_IMAGES = [
-    "https://media.istockphoto.com/id/1459635542/vector/teddy-bear-icon-set-editable-stroke.jpg?s=612x612&w=0&k=20&c=EMOWhqZMl1FPV7tWtgnjKgBv7EeWG9hNM9bKkJjfji8=",
-    "https://static.vecteezy.com/system/resources/previews/003/267/981/non_2x/heart-symbol-mascot-cartoon-giving-the-gift-free-vector.jpg",
-    "https://i.fbcd.co/products/resized/resized-750-500/one006e-41-e02-mainpreview-f4969a39a7b3114fee9f9b17477f8533455df64ad814b124b5b3a89b70af6591.jpg",
-    "https://t4.ftcdn.net/jpg/17/07/36/25/360_F_1707362523_EC8jYsnKr44mrhn5mpgxtQjtnQ65FAO1.jpg",
-    "https://i.fbcd.co/products/resized/resized-750-500/naj20-10-1575cff896488af51ed0eed8f2ad8a19c5c77ff7093f715ef8de9e0a5ea345e0.jpg",
-    "https://static.vecteezy.com/system/resources/previews/054/666/494/non_2x/dynamic-cartoon-rocket-icon-with-vibrant-colors-depicting-launch-innovation-and-space-exploration-in-a-playful-modern-style-free-vector.jpg",
-    "https://i.fbcd.co/products/resized/resized-750-500/g16223-95a8fcc5f46afb49a63cd4d1c7e17b1d926c7c2865634787ffaf5cd361f55cac.jpg",
-    "https://img.freepik.com/premium-vector/cartoon-trophy-cup-icon-vector-illustration-success-achievement_1138841-26011.jpg",
-    "https://media.istockphoto.com/id/1268794152/vector/diamond-vector-isolated-collection-vector-gem-jewel-symbol-signs-cartoon-diamonds-icon.jpg?s=612x612&w=0&k=20&c=NC6J8KqJvuC8PS47Qk3Yw_xTSV2krWQMJaKJa-CJ-4g=",
-    "https://cbx-prod.b-cdn.net/COLOURBOX63317673.jpg?width=800&height=800&quality=70",
-    "https://thumbs.dreamstime.com/b/game-victory-icon-badge-award-trophy-gui-banner-interface-rewards-screen-featuring-golden-star-raised-spears-red-ribbons-wings-355252594.jpg"
-];
-
-const SPAWN_CHANCES = [0.70, 0.20, 0.07, 0.02, 0.005, 0.002, 0.001, 0.0005, 0.0003, 0.0001, 0.0001];
-const SPAWN_EXP = [5, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120];
-
-const GRID_SIZE = 12; // 4 × 3 = 12 ячеек
-const ENERGY_COST = 5;
-const MAX_ENERGY_BASE = 20;
-const ENERGY_REGEN_MS = 120000;
-
-let level = 1;
-let exp = 0;
-let expToNext = 100;
-let maxEnergy = MAX_ENERGY_BASE;
-let energy = maxEnergy;
-let giftSetsCount = 0;
-let board = Array(GRID_SIZE).fill(null);
-let dragSrc = null;
-let touchDragSrc = null;
-let selectedCellIndex = null;
-let todayClaimed = false;
-let lastRegenTime = Date.now();
-
-const TODAY = new Date();
-
-// === LocalStorage ===
-function saveGame() {
-    const saveData = {
-        level, exp, expToNext, maxEnergy, energy, giftSetsCount, board, todayClaimed,
-        lastSaveDate: TODAY.toDateString()
-    };
-    localStorage.setItem('mergeGiftSave', JSON.stringify(saveData));
-}
-
-function loadGame() {
-    const saved = localStorage.getItem('mergeGiftSave');
-    if (!saved) return false;
-
-    const data = JSON.parse(saved);
-    level = data.level || 1;
-    exp = data.exp || 0;
-    expToNext = data.expToNext || 100;
-    maxEnergy = data.maxEnergy || MAX_ENERGY_BASE;
-    energy = data.energy || maxEnergy;
-    giftSetsCount = data.giftSetsCount || 0;
-    board = data.board || Array(GRID_SIZE).fill(null);
-    todayClaimed = data.todayClaimed || false;
-
-    if (data.lastSaveDate !== TODAY.toDateString()) {
-        todayClaimed = false;
-    }
-    return true;
-}
-
-function autoSave() {
-    saveGame();
-    updateLevel();
-    document.getElementById('energy-text').textContent = `${energy} / ${maxEnergy}`;
-    updateGiftCount();
-    renderBoard();
-    updateExchangePanel();
-}
-
-// === Таймер энергии ===
-function updateEnergyTimer() {
-    const remainingMs = ENERGY_REGEN_MS - (Date.now() - lastRegenTime);
-    if (energy >= maxEnergy || remainingMs <= 0) {
-        document.getElementById('energy-timer').textContent = '';
-        return;
-    }
-    const remainingSec = Math.ceil(remainingMs / 1000);
-    const min = Math.floor(remainingSec / 60);
-    const sec = remainingSec % 60;
-    document.getElementById('energy-timer').textContent = `(через ${min}:${sec.toString().padStart(2, '0')})`;
-}
-
-setInterval(() => {
-    const now = Date.now();
-    if (now - lastRegenTime >= ENERGY_REGEN_MS && energy < maxEnergy) {
-        energy++;
-        lastRegenTime = now;
-        autoSave();
-    }
-    updateEnergyTimer();
-}, 1000);
-
-// === Доска 4×3 ===
-const gameBoard = document.getElementById('game-board');
-for (let i = 0; i < GRID_SIZE; i++) {
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    cell.dataset.index = i;
-    cell.addEventListener('click', () => selectForExchange(i));
-    cell.addEventListener('dragover', e => e.preventDefault());
-    cell.addEventListener('drop', handleDrop);
-
-    cell.addEventListener('touchstart', e => {
-        e.preventDefault();
-        const img = cell.querySelector('.item');
-        if (img) touchDragSrc = i;
-    });
-
-    cell.addEventListener('touchend', e => {
-        if (touchDragSrc === null) return;
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const targetCell = target?.closest('.cell');
-        if (targetCell) {
-            const targetIdx = parseInt(targetCell.dataset.index);
-            if (touchDragSrc !== targetIdx) mergeOrMove(touchDragSrc, targetIdx);
-        }
-        touchDragSrc = null;
-    });
-
-    gameBoard.appendChild(cell);
-}
-
-function selectForExchange(index) {
-    if (board[index] !== null) {
-        if (selectedCellIndex === index) {
-            selectedCellIndex = null;
-        } else {
-            selectedCellIndex = index;
-        }
-        renderBoard();
-        updateExchangePanel();
-    }
-}
-
-function updateExchangePanel() {
-    const panel = document.getElementById('exchange-panel');
-    if (selectedCellIndex !== null && board[selectedCellIndex] !== null) {
-        const lvl = board[selectedCellIndex];
-        document.getElementById('selected-level').textContent = lvl + 1;
-        document.getElementById('exchange-energy').textContent = lvl + 1;
-        panel.classList.add('active');
-    } else {
-        panel.classList.remove('active');
-    }
-}
-
-document.getElementById('exchange-button').addEventListener('click', () => {
-    if (selectedCellIndex === null || board[selectedCellIndex] === null) return;
-    const lvl = board[selectedCellIndex];
-    energy += (lvl + 1);
-    board[selectedCellIndex] = null;
-    selectedCellIndex = null;
-    autoSave();
-    alert(`Обменяно! +${lvl + 1} энергии`);
-});
-
-function mergeOrMove(srcIdx, tgtIdx) {
-    const srcLvl = board[srcIdx];
-    const tgtLvl = board[tgtIdx];
-    if (srcLvl !== null && tgtLvl !== null && srcLvl === tgtLvl) {
-        let newLvl = srcLvl + 1;
-        if (newLvl > 10) newLvl = 10;
-        board[tgtIdx] = newLvl;
-        board[srcIdx] = null;
-
-        let gainedExp = 10 * (srcLvl + 1);
-        if (srcLvl === 9) gainedExp = 100;
-        if (srcLvl === 10) {
-            gainedExp = Math.floor(200 * (2 + Math.random()));
-            board[tgtIdx] = null;
-            board[srcIdx] = null;
-        }
-        addExp(gainedExp);
-    } else if (tgtLvl === null) {
-        board[tgtIdx] = srcLvl;
-        board[srcIdx] = null;
-    }
-    autoSave();
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    const targetIdx = parseInt(e.target.dataset.index || e.target.parentNode.dataset.index);
-    if (dragSrc !== null && dragSrc !== targetIdx) {
-        mergeOrMove(dragSrc, targetIdx);
-    }
-    dragSrc = null;
-}
-
-function handleDragStart(e) {
-    if (e.target.classList.contains('item')) {
-        dragSrc = parseInt(e.target.parentNode.dataset.index);
-    }
-}
-
-function renderBoard() {
-    document.querySelectorAll('.cell').forEach((cell, i) => {
-        cell.innerHTML = '';
-        cell.classList.remove('selected');
-        if (board[i] !== null) {
-            const img = document.createElement('img');
-            img.src = ITEM_IMAGES[board[i]];
-            img.classList.add('item');
-            img.draggable = true;
-            img.addEventListener('dragstart', handleDragStart);
-            cell.appendChild(img);
-        }
-        if (i === selectedCellIndex) {
-            cell.classList.add('selected');
-        }
-    });
-}
-
-function updateLevel() {
-    document.getElementById('level-info').textContent = `Уровень: ${level} | Опыт: ${exp} / ${expToNext}`;
-    document.getElementById('progress').style.width = `${(exp / expToNext) * 100}%`;
-}
-
-function updateGiftCount() {
-    document.getElementById('gift-count').textContent = `Гифт-наборы: ${giftSetsCount}`;
-    document.getElementById('gift-sets-button').disabled = giftSetsCount <= 0;
-}
-
-function addExp(amount) {
-    exp += amount;
-    while (exp >= expToNext) {
-        exp -= expToNext;
-        level++;
-        expToNext = Math.floor(100 * level * 1.2);
-        if (level % 10 === 0) alert(`Уровень ${level}! Разблокирована новая картинка!`);
-        if (level % 25 === 0) {
-            maxEnergy += 5;
-            energy = Math.min(energy + 5, maxEnergy);
-            autoSave();
-            alert(`Уровень ${level}! +5 к максимуму энергии!`);
-        }
-        giftSetsCount += 1;
-        updateGiftCount();
-        alert(`Получен гифт-набор!`);
-    }
-    autoSave();
-}
-
-// Спавн
-document.getElementById('spawn-button').addEventListener('click', () => {
-    if (energy < ENERGY_COST) return alert('Недостаточно энергии!');
-    const empty = board.reduce((acc, val, idx) => val === null ? acc.concat(idx) : acc, []);
-    if (empty.length === 0) return alert('Нет свободного места!');
-    energy -= ENERGY_COST;
-    let rand = Math.random();
-    let cum = 0;
-    let lvl = 0;
-    for (let i = 0; i < SPAWN_CHANCES.length; i++) {
-        cum += SPAWN_CHANCES[i];
-        if (rand <= cum) { lvl = i; break; }
-    }
-    const idx = empty[Math.floor(Math.random() * empty.length)];
-    board[idx] = lvl;
-    addExp(SPAWN_EXP[lvl]);
-    autoSave();
-});
-
-// Гифт-наборы
-document.getElementById('gift-sets-button').addEventListener('click', () => {
-    if (giftSetsCount > 0) {
-        giftSetsCount--;
-        updateGiftCount();
-        openGiftSet();
-        autoSave();
-    }
-});
-
-function openGiftSet() {
-    document.getElementById('gift-modal').style.display = 'flex';
-    const reel = document.getElementById('reel');
-    reel.innerHTML = '';
-    document.getElementById('win-result').textContent = 'Крутится...';
-
-    const totalItems = 60;
-    const itemWidth = 140;
-    const containerWidth = 420;
-    const centerOffset = containerWidth / 2 - itemWidth / 2;
-
-    const items = [];
-    for (let i = 0; i < totalItems; i++) {
-        const lvl = weightedRandomLevel();
-        const img = document.createElement('img');
-        img.src = ITEM_IMAGES[lvl];
-        img.classList.add('reel-item');
-        reel.appendChild(img);
-        items.push(lvl);
-    }
-
-    const winIndex = 25 + Math.floor(Math.random() * 10);
-    const winLevel = items[winIndex];
-    const finalX = -(winIndex * itemWidth) + centerOffset;
-
-    reel.style.transition = 'none';
-    reel.style.transform = `translateX(0px)`;
-    requestAnimationFrame(() => {
-        reel.style.transition = 'transform 5.5s cubic-bezier(0.08, 0.82, 0.17, 1)';
-        reel.style.transform = `translateX(${finalX}px)`;
-    });
-
-    setTimeout(() => {
-        const expGained = SPAWN_EXP[winLevel];
-        document.getElementById('win-result').innerHTML = `
-            <strong style="font-size:28px;">ПОЗДРАВЛЯЕМ!</strong><br><br>
-            Выиграно: Уровень ${winLevel + 1}<br>
-            +${expGained} опыта
-        `;
-        addExp(expGained);
-
-        const empty = board.findIndex(v => v === null);
-        if (empty !== -1) {
-            board[empty] = winLevel;
-            renderBoard();
-        }
-        autoSave();
-    }, 5800);
-}
-
-function weightedRandomLevel() {
-    let rand = Math.random();
-    let cum = 0;
-    for (let i = 0; i < SPAWN_CHANCES.length; i++) {
-        cum += SPAWN_CHANCES[i];
-        if (rand <= cum) return i;
-    }
-    return 0;
-}
-
-document.getElementById('close-gift').addEventListener('click', () => {
-    document.getElementById('gift-modal').style.display = 'none';
-});
-
-// Награды уровней
-document.getElementById('rewards-preview-button').addEventListener('click', () => {
-    document.getElementById('rewards-modal').style.display = 'flex';
-    const list = document.getElementById('rewards-list');
-    list.innerHTML = '';
-
-    const pastStart = Math.max(1, level - 10);
-    const futureEnd = level + 20;
-
-    for (let l = pastStart; l <= futureEnd; l++) {
-        const div = document.createElement('div');
-        div.classList.add('reward-item');
-        if (l < level) div.classList.add('past-level');
-        if (l === level) div.classList.add('current-level');
-
-        let text = `<strong>Уровень ${l}</strong><br>`;
-        if (l % 10 === 0) text += `• Новая картинка<br>`;
-        if (l % 25 === 0) text += `• +5 к максимуму энергии<br>`;
-        text += `• Гифт-набор`;
-
-        div.innerHTML = text;
-        list.appendChild(div);
-    }
-});
-
-document.getElementById('back-rewards').addEventListener('click', () => document.getElementById('rewards-modal').style.display = 'none');
-document.getElementById('back-rewards-top').addEventListener('click', () => document.getElementById('rewards-modal').style.display = 'none');
-
-// Календарь
-document.getElementById('calendar-button').addEventListener('click', showCalendar);
-document.getElementById('close-calendar').addEventListener('click', () => document.getElementById('calendar-modal').style.display = 'none');
-
-function showCalendar() {
-    const modal = document.getElementById('calendar-modal');
-    const grid = document.getElementById('cal-grid');
-    grid.innerHTML = '';
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const todayDate = now.getDate();
-
-    const firstDayOfMonth = new Date(year, month, 1);
-    const weekday = firstDayOfMonth.getDay();
-    const startDay = weekday === 0 ? 6 : weekday - 1;
-
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(dayName => {
-        const header = document.createElement('div');
-        header.classList.add('cal-weekday');
-        header.textContent = dayName;
-        grid.appendChild(header);
-    });
-
-    for (let i = 0; i < startDay; i++) {
-        grid.appendChild(document.createElement('div'));
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-        const cell = document.createElement('div');
-        cell.classList.add('cal-day');
-        cell.textContent = day;
-
-        if (day < todayDate) {
-            cell.classList.add('cal-past');
-        } else if (day > todayDate) {
-            cell.classList.add('cal-future');
-        } else {
-            cell.classList.add('cal-today');
-            if (todayClaimed) {
-                cell.classList.add('cal-claimed');
-                cell.textContent += ' ✓';
-            } else {
-                cell.addEventListener('click', () => {
-                    todayClaimed = true;
-                    giftSetsCount += 1;
-                    updateGiftCount();
-                    addExp(100);
-                    alert('Награда дня: Гифт-набор + 100 опыта!');
-                    cell.classList.add('cal-claimed');
-                    cell.textContent += ' ✓';
-                    autoSave();
-                });
+        function findItem(itemId) {
+            const item = document.getElementById(itemId);
+            if (item && !item.classList.contains('found')) {
+                item.classList.add('found');
+                foundCount++;
+                document.getElementById('message').innerText = `Нашёл: ${itemId}! Осталось: ${totalItems - foundCount}`;
+                if (foundCount === totalItems) {
+                    document.getElementById('message').innerText = 'Поздравляю! Все предметы найдены!';
+                    tg.MainButton.setText('Игра завершена').show(); // Пример кнопки Telegram
+                }
             }
         }
-        grid.appendChild(cell);
-    }
-
-    modal.style.display = 'flex';
-}
-
-// === Загрузка и старт ===
-if (loadGame()) {
-    console.log('Прогресс загружен');
-} else {
-    console.log('Новая игра');
-}
-
-updateLevel();
-document.getElementById('energy-text').textContent = `${energy} / ${maxEnergy}`;
-updateGiftCount();
-renderBoard();
-updateEnergyTimer();
-updateExchangePanel();
-</script>
+    </script>
 </body>
 </html>
