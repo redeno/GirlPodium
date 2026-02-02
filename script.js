@@ -186,13 +186,52 @@ function drawBall() {
 }
 
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Красивый фон вместо пустоты
+    const gradient = ctx.createRadialGradient(
+        canvas.width * 0.3, canvas.height * 0.2, 0,
+        canvas.width * 0.3, canvas.height * 0.2, canvas.width
+    );
+    gradient.addColorStop(0, '#E3F2FD');
+    gradient.addColorStop(0.5, '#87CEEB');
+    gradient.addColorStop(1, '#98FB98');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Облака (анимация)
+    drawClouds();
+    
     update();
     drawRing();
     drawRope();
     drawBall();
     requestAnimationFrame(gameLoop);
 }
+
+function drawClouds() {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.shadowColor = 'rgba(255,255,255,0.3)';
+    ctx.shadowBlur = 10;
+    
+    // 3 облака с лёгким движением
+    const clouds = [
+        {x: canvas.width * 0.2 + Math.sin(Date.now() * 0.001) * 20, y: 80, size: 60},
+        {x: canvas.width * 0.6 + Math.cos(Date.now() * 0.0008) * 15, y: 120, size: 80},
+        {x: canvas.width * 0.85 + Math.sin(Date.now() * 0.0009) * 25, y: 60, size: 70}
+    ];
+    
+    clouds.forEach(cloud => {
+        ctx.beginPath();
+        ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+        ctx.arc(cloud.x + 30, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
+        ctx.arc(cloud.x + 60, cloud.y, cloud.size, 0, Math.PI * 2);
+        ctx.arc(cloud.x + 20, cloud.y - 20, cloud.size * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.shadowBlur = 0;
+    ctx.restore();
+}
+
 
 // Старт
 spawnBall();
