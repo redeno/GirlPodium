@@ -4,10 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Игра с шариком и верёвкой для ❤️</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * { margin: 0; padding: 0; }
+        body, html { 
+            height: 100%; 
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: pointer;
+            touch-action: none;
+            background: radial-gradient(circle at 30% 20%, #fff, #87CEEB);
+        }
+    </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="400" height="600"></canvas>
-    <script src="script.js"></script>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        // Весь JS код ниже
+    </script>
 </body>
 </html>
