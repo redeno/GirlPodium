@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 100% 97%; /* Light blueish white */
+  --foreground: 222 47% 11%;
+  
+  --primary: 330 100% 71%;    /* Hot Pink #FF69B4 equivalent */
+  --primary-foreground: 210 40% 98%;
+  
+  --secondary: 262 83% 58%;   /* Purple accent */
+  --secondary-foreground: 210 40% 98%;
+  
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  
+  --accent: 142 76% 85%;      /* Soft Green for contrast */
+  --accent-foreground: 222 47% 11%;
+  
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 330 100% 71%;
+  
+  --radius: 1rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased overflow-hidden;
+    font-family: 'Nunito', sans-serif;
+    background: radial-gradient(circle at center, #E3F2FD 0%, #87CEEB 60%, #98FB98 100%);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fredoka', sans-serif;
+    @apply font-semibold tracking-tight;
+  }
+}
+
+/* Custom scrollbar for leaderboard */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.glass-panel {
+  @apply bg-white/30 backdrop-blur-md border border-white/40 shadow-xl rounded-2xl;
+}
+
+.text-stroke {
+  -webkit-text-stroke: 1px rgba(0,0,0,0.1);
+}
