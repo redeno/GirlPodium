@@ -494,7 +494,7 @@
                 showToast('🛒 Приехала новая телега с товарами!');
                 if(document.getElementById('tab-shop').classList.contains('active')) renderShop();
             }
-            if (now - state.lastIncomeTime >= 3600000) { 
+            if (now - state.lastIncomeTime >= 10 * 60 * 1000) { 
                 const reward = state.level * 25;
                 state.coins += reward;
                 state.lastIncomeTime = now;
