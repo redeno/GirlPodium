@@ -367,7 +367,7 @@ return Math.max(300000, 600000 - reduction);
 function generateShop() {
 const availableIngs = ALL_INGREDIENTS.filter(i => i.lvl <= state.level && !i.isCrafted);
 const shuffled = availableIngs.sort(() => 0.5 - Math.random());
-state.shopItems = shuffled.slice(0, 4).map(i => ({
+state.shopItems = shuffled.slice(0, 6).map(i => ({
 id: i.id,
 stock: Math.floor(Math.random() * 6) + 2
 }));
