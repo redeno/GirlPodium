@@ -485,7 +485,7 @@ showToast(`✨ ${crafted.result} ${crafted.name}!`);
 
 if (!state.unlocked.includes(crafted.id)) {
 state.unlocked.push(crafted.id);
-state.level = Math.floor(state.unlocked.length / 10) + 1;
+state.level = Math.floor(state.unlocked.length / 8) + 1;
 }
 state.cauldron = [];
 } else {
