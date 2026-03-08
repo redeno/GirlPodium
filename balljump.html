@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Perpetual Bounce – Multi-Ball Threads</title>
+  <style>
+    body { margin:0; overflow:hidden; background:#000814; font-family:system-ui,sans-serif; }
+    canvas { display:block; }
+    .title {
+      position:fixed; top:24px; left:50%; transform:translateX(-50%);
+      color:rgba(200,80,220,0.75); font-size:1.15rem; letter-spacing:5px;
+      text-transform:uppercase; pointer-events:none; z-index:5; font-weight:600;
+      text-shadow:0 0 24px rgba(200,80,220,0.5);
+    }
+  </style>
+</head>
+<body>
+
+<div class="title">PERPETUAL GRAVITY</div>
+
+<canvas id="c"></canvas>
+
+<button id="spawnBtn" onclick="spawnNewBall()" style="
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 12px 16px;
+  background: rgba(200, 80, 220, 0.8);
+  color: #fff;
+  border: 2px solid rgba(200, 80, 220, 1);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 0 24px rgba(200, 80, 220, 0.3);
+  pointer-events: all;
+">Добавить мячик</button>
+
+<script>
+const GRAVITY          = 0.06;          // уменьшена гравитация
+const BOUNCE_SIDE      = 0.98;
+const BOUNCE_BOTTOM    = 1.08;          // уменьшена сила отскока
+const BASE_SPEED       = 5.0;           // уменьшена базовая скорость
+const SPEED_RECOVER    = 0.015;         // более плавное восстановление
+const KICK_ANGLE       = 0.45;
+const BOTTOM_THRESHOLD = 0.65;
+const BALL_RADIUS      = 9;
+
+let canvas, ctx, w, h, cx, cy, radius;
+let balls = [];
+
+const COLORS = ['#ffea00', '#ff0055', '#00ffcc', '#aa00ff'];
+let nextBallId = 4;
+
+function init() {
+  canvas = document.getElementById('c');
+  ctx = canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize', resize);
+  spawnBalls();
+  requestAnimationFrame(loop);
+}
+
+function resize() {
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+  cx = w / 2;
+  cy = h / 2;
+  radius = Math.min(w, h) / 2 * 0.88;
+}
+
+function createBall(index) {
+  // Разбрасываем мячи в разные стороны по кругу
+  const angle = (index / 4) * Math.PI * 2;
+  const speed = 4 + Math.random() * 2;
+  return {
+    id: index,
+    x: cx + Math.cos(angle) * radius * 0.2,
+    y: cy + Math.sin(angle) * radius * 0.2,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    color: COLORS[index % COLORS.length],
+    threads: [],
+    active: true,
+    hasCollided: false
+  };
+}
+
+function spawnNewBall() {
+  const newBall = createBall(nextBallId);
+  newBall.color = COLORS[nextBallId % COLORS.length];
+  balls.push(newBall);
+  nextBallId++;
+}
+
+function spawnBalls() {
+  balls = [];
+  for (let i = 0; i < 4; i++) {
+    balls.push(createBall(i));
+  }
+  nextBallId = 4;
+}
+
+function loop() {
+  update();
+  render();
+  requestAnimationFrame(loop);
+}
+
+function update() {
+  balls.forEach(ball => {
+    if (!ball.active) return;
+
+    ball.vy += GRAVITY;
+    const speed = Math.hypot(ball.vx, ball.vy);
+    if (speed > 0) {
+      const dirX = ball.vx / speed;
+      const dirY = ball.vy / speed;
+      ball.vx += dirX * SPEED_RECOVER * (BASE_SPEED - speed);
+      ball.vy += dirY * SPEED_RECOVER * (BASE_SPEED - speed);
+    }
+
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    const dx = ball.x - cx;
+    const dy = ball.y - cy;
+    const dist = Math.hypot(dx, dy);
+
+    // Столкновение с основным кругом
+    if (dist + BALL_RADIUS > radius) {
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const dot = ball.vx * nx + ball.vy * ny;
+      const isBottom = ny > BOTTOM_THRESHOLD;
+      const bounceFactor = isBottom ? BOUNCE_BOTTOM : BOUNCE_SIDE;
+
+      ball.vx = (ball.vx - 2 * dot * nx) * bounceFactor;
+      ball.vy = (ball.vy - 2 * dot * ny) * bounceFactor;
+
+      const kick = (Math.random() - 0.5) * KICK_ANGLE * 2;
+      ball.vx += -ny * kick;
+      ball.vy += nx * kick;
+
+      if (isBottom) ball.vy -= 3.2 + Math.random() * 1.2;
+
+      ball.x = cx + nx * (radius - BALL_RADIUS);
+      ball.y = cy + ny * (radius - BALL_RADIUS);
+      
+      ball.threads.push({ x: ball.x, y: ball.y });
+    }
+
+    // Проверка столкновения мячика с чужими нитями
+    balls.forEach(otherBall => {
+      if (otherBall === ball || !otherBall.active) return;
+      
+      for (let i = otherBall.threads.length - 1; i >= 0; i--) {
+        const t = otherBall.threads[i];
+        const distToThread = getDistToSegment(ball.x, ball.y, otherBall.x, otherBall.y, t.x, t.y);
+        
+        if (distToThread < BALL_RADIUS) {
+          otherBall.threads.splice(i, 1);
+        }
+      }
+    });
+  });
+
+  // Проверка на удаление мячика (если 0 нитей после первого удара)
+  balls.forEach(ball => {
+    if (ball.active && ball.threads.length === 0 && hasEverHit(ball)) {
+      // Даем небольшую фору в начале, пока не было первого удара
+      // Но по условию: "если по итогу у меча 0 связей - то мячик пропадает"
+      // Чтобы они не пропадали мгновенно при спавне, проверяем наличие хотя бы одного столкновения в истории
+    }
+  });
+  
+  // Уточнение: мяч пропадает, если у него 0 нитей (и он уже хотя бы раз ударился)
+  for (let ball of balls) {
+    if (ball.active && ball.threads.length === 0 && ball.x !== cx) { 
+        // Если мяч уже двигался и не имеет нитей - удаляем (упрощенная логика "после старта")
+        // На самом деле лучше удалять только если он БЫЛ с нитями, а потом они закончились.
+    }
+  }
+  
+  // Применяем правило удаления:
+  balls.forEach(ball => {
+    if (ball.active && ball.threads.length === 0 && ball.hasCollided) {
+      ball.active = false;
+    }
+    if (ball.threads.length > 0) ball.hasCollided = true;
+  });
+}
+
+function getDistToSegment(px, py, x1, y1, x2, y2) {
+  const l2 = (x1 - x2) ** 2 + (y1 - y2) ** 2;
+  if (l2 === 0) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+}
+
+function hasEverHit(ball) {
+    return ball.threads.length > 0;
+}
+
+function render() {
+  ctx.fillStyle = 'rgba(0,8,20,0.15)';
+  ctx.fillRect(0, 0, w, h);
+
+  // круг
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(200,80,240,0.4)';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  balls.forEach(ball => {
+    if (!ball.active) return;
+
+    // ниточки
+    if (ball.threads.length > 0) {
+      ctx.beginPath();
+      ball.threads.forEach(t => {
+        ctx.moveTo(t.x, t.y);
+        ctx.lineTo(ball.x, ball.y);
+      });
+      ctx.strokeStyle = ball.color;
+      ctx.globalAlpha = 0.3;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // шарик
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = ball.color;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(ball.x - 3.5, ball.y - 3.5, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fill();
+  });
+  
+  // Если все пропали - респавн через время (опционально, но для теста удобно)
+  if (balls.every(b => !b.active)) {
+    setTimeout(spawnBalls, 2000);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

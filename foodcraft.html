@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Food Craft - Advanced Edition</title>
+<style>
+:root {
+--bg: var(--tg-theme-bg-color, #f0f2f5);
+--text: var(--tg-theme-text-color, #222);
+--hint: var(--tg-theme-hint-color, #999);
+--sec-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+--primary: #2196F3;
+--success: #4CAF50;
+--warning: #FF9800;
+--danger: #f44336;
+--rarity-common: #9e9e9e;
+--rarity-uncommon: #4caf50;
+--rarity-rare: #2196f3;
+--rarity-epic: #9c27b0;
+--rarity-legendary: #ff9800;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 90px; touch-action: manipulation; line-height: 1.4; }
+.header { background: var(--sec-bg); padding: 16px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.03); }
+.level-badge { background: var(--success); color: white; padding: 6px 12px; border-radius: 10px; font-size: 14px; font-weight: 700; }
+.coins-badge { background: #FFC107; color: #333; padding: 6px 12px; border-radius: 10px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.nav-tabs { display: flex; gap: 6px; margin-bottom: 16px; background: var(--sec-bg); padding: 6px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 100; }
+.nav-tab { flex: 1; padding: 10px 4px; text-align: center; border-radius: 10px; background: transparent; border: none; color: var(--text); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; }
+.nav-tab.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3); }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: slideUp 0.3s ease-out; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.section-title { font-size: 15px; font-weight: 700; margin: 15px 0 10px 4px; display: flex; justify-content: space-between; align-items: center; color: var(--hint); text-transform: uppercase; letter-spacing: 0.5px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.item-card { background: var(--sec-bg); border-radius: 16px; padding: 12px 6px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 2px solid transparent; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; position: relative; }
+.item-card:active { transform: scale(0.92); }
+.item-card.locked { opacity: 0.4; filter: grayscale(0.8); cursor: not-allowed; }
+.item-card.selected { border-color: var(--primary); background: rgba(33, 150, 243, 0.04); }
+.item-emoji { font-size: 32px; margin-bottom: 6px; transition: transform 0.2s; }
+.item-card:hover .item-emoji { transform: scale(1.1); }
+.item-name { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.item-count { font-size: 11px; color: var(--primary); font-weight: 800; background: rgba(33, 150, 243, 0.1); padding: 3px 8px; border-radius: 12px; }
+.item-zero { color: var(--hint); background: rgba(0,0,0,0.05); }
+.item-price { color: var(--success); font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 2px; }
+.item-stock { font-size: 10px; color: var(--warning); font-weight: 600; margin-top: 4px; }
+.cauldron-area { background: linear-gradient(135deg, var(--sec-bg) 0%, #f9f9f9 100%); padding: 20px; border-radius: 22px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; border: 1px solid rgba(0,0,0,0.02); }
+.cauldron-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px auto; max-width: 180px; }
+.c-slot { aspect-ratio: 1; border-radius: 14px; border: 2px dashed #d1d1d1; display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; }
+.c-slot.filled { border: 2px solid var(--primary); background: white; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.15); animation: pop 0.2s ease-out; }
+@keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
+.btn-primary { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; border: none; padding: 14px 20px; border-radius: 16px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; box-shadow: 0 6px 15px rgba(33, 150, 243, 0.25); transition: all 0.2s; }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(33, 150, 243, 0.25); }
+.btn-primary:disabled { background: #d0d0d0; box-shadow: none; cursor: not-allowed; }
+.recipe-row { display: flex; align-items: center; background: var(--sec-bg); padding: 14px; border-radius: 18px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); gap: 15px; border: 2px solid transparent; transition: 0.2s; }
+.recipe-row.common { border-color: var(--rarity-common); }
+.recipe-row.uncommon { border-color: var(--rarity-uncommon); }
+.recipe-row.rare { border-color: var(--rarity-rare); }
+.recipe-row.epic { border-color: var(--rarity-epic); }
+.recipe-row.legendary { border-color: var(--rarity-legendary); box-shadow: 0 0 15px rgba(255, 152, 0, 0.2); }
+.recipe-result { font-size: 36px; width: 60px; text-align: center; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
+.recipe-info { flex: 1; }
+.recipe-name { font-weight: 800; font-size: 15px; color: var(--text); }
+.recipe-ings { font-size: 13px; color: var(--hint); margin-top: 4px; font-weight: 500; }
+.recipe-hint { color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 4px; }
+.rarity-label { font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; margin-bottom: 4px; display: inline-block; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+.modal.show { display: flex; }
+.modal-content { background: var(--sec-bg); border-radius: 24px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+.modal-title { font-size: 20px; font-weight: 800; margin-bottom: 15px; color: var(--primary); text-align: center; }
+.guide-text { font-size: 14px; color: var(--text); margin-bottom: 12px; }
+.guide-item { margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--primary); }
+.guide-label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 4px; color: var(--primary); }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(0,0,0,0.85); color: white; padding: 14px 24px; border-radius: 25px; font-size: 14px; font-weight: 600; z-index: 3000; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.timer { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: rgba(0,0,0,0.05); padding: 4px 10px; border-radius: 10px; color: var(--danger); font-weight: 700; }
+.help-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 25px; background: var(--primary); color: white; border: none; font-size: 24px; font-weight: bold; box-shadow: 0 4px 15px rgba(33,150,243,0.4); z-index: 500; cursor: pointer; }
+
+/* Стили для чекбокса */
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--sec-bg);
+  padding: 6px 10px;
+  border-radius: 10px;
+  user-select: none;
+}
+.filter-checkbox input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div style="display: flex; align-items: center; gap: 10px;">
+  <a href="/" style="text-decoration: none; background: rgba(0,0,0,0.1); padding: 5px 12px; border-radius: 12px; color: var(--text); font-weight: bold; display: flex; align-items: center; justify-content: center;">🏠</a>
+  <div>🍳 Food Craft</div>
+  </div>
+<div style="display: flex; gap: 8px;">
+<div class="level-badge">Lvl <span id="ui-level">1</span></div>
+<div class="coins-badge">🪙 <span id="ui-coins">100</span></div>
+</div>
+</div>
+<div class="nav-tabs">
+<button class="nav-tab active" onclick="switchTab('craft')">🥣 Котёл</button>
+<button class="nav-tab" onclick="switchTab('shop')">🛒 Лавка</button>
+<button class="nav-tab" onclick="switchTab('recipes')">📋 Книга</button>
+</div>
+<div id="tab-craft" class="tab-content active">
+<div class="cauldron-area">
+<div class="section-title" style="justify-content: center; margin-top: 0;">Варево (до 9 ингр.)</div>
+<div class="cauldron-slots" id="cauldron"></div>
+<button id="btn-craft" class="btn-primary" onclick="doCraft()" disabled>Начать готовку</button>
+</div>
+<div class="section-title">Ингредиенты</div>
+<div class="grid" id="inventory-grid"></div>
+</div>
+<div id="tab-shop" class="tab-content">
+<div class="section-title">
+<span>Покупка</span>
+<span class="timer" id="shop-timer">10:00</span>
+</div>
+<div class="grid" id="shop-grid" style="margin-bottom: 25px;"></div>
+<div class="section-title">Сбыт готовых блюд</div>
+<div class="grid" id="sell-grid"></div>
+</div>
+<div id="tab-recipes" class="tab-content">
+<div class="section-title" style="justify-content: space-between;">
+<span>Прогресс: <span id="recipe-progress">0</span> / 133</span>
+<label class="filter-checkbox">
+<input type="checkbox" id="hide-unlocked-checkbox" onchange="renderRecipes()">
+<span>🔒 только неоткрытые</span>
+</label>
+</div>
+<div id="recipes-list"></div>
+</div>
+<button class="help-btn" onclick="toggleModal(true)">?</button>
+<div id="help-modal" class="modal" onclick="if(event.target===this) toggleModal(false)">
+<div class="modal-content">
+<div class="modal-title">Справочник новичка</div>
+<div class="guide-item">
+<span class="guide-label">Как играть?</span>
+<p class="guide-text">Выбирайте ингредиенты в разделе "Котёл". Экспериментируйте с сочетаниями, чтобы открыть новые блюда!</p>
+</div>
+<div class="guide-item">
+<span class="guide-label">Ингредиенты</span>
+<p class="guide-text">Максимум в один крафт можно положить 9 разных ингредиентов. Порядок не важен. Повторять один и тот же ингредиент нельзя.</p>
+</div>
+<div class="guide-item">
+<span class="guide-label">Промежуточные ингредиенты</span>
+<p class="guide-text">Некоторые блюда (Тесто, Бульон и др.) можно использовать как ингредиенты для более сложных рецептов!</p>
+</div>
+<button class="btn-primary" onclick="toggleModal(false)">Понятно!</button>
+</div>
+</div>
+<div id="toast" class="toast">Сообщение</div>
+<script>
+const ALL_INGREDIENTS = [
+{ id: 1, name: 'Мука', emoji: '🌾', lvl: 1, price: 5 },
+{ id: 2, name: 'Соль', emoji: '🧂', lvl: 1, price: 3 },
+{ id: 3, name: 'Вода', emoji: '💧', lvl: 1, price: 2 },
+{ id: 4, name: 'Сахар', emoji: '🍚', lvl: 1, price: 6 },
+{ id: 5, name: 'Картофель', emoji: '🥔', lvl: 1, price: 8 },
+{ id: 6, name: 'Томат', emoji: '🍅', lvl: 2, price: 10 },
+{ id: 7, name: 'Огурец', emoji: '🥒', lvl: 2, price: 9 },
+{ id: 8, name: 'Морковь', emoji: '🥕', lvl: 2, price: 8 },
+{ id: 9, name: 'Яйцо', emoji: '🥚', lvl: 3, price: 12 },
+{ id: 10, name: 'Молоко', emoji: '🥛', lvl: 3, price: 15 },
+{ id: 11, name: 'Масло', emoji: '🧈', lvl: 3, price: 18 },
+{ id: 12, name: 'Мясо', emoji: '🥩', lvl: 4, price: 30 },
+{ id: 13, name: 'Курица', emoji: '🍗', lvl: 4, price: 25 },
+{ id: 14, name: 'Рыба', emoji: '🐟', lvl: 5, price: 28 },
+{ id: 15, name: 'Рис', emoji: '🍙', lvl: 5, price: 20 },
+{ id: 16, name: 'Сыр', emoji: '🧀', lvl: 6, price: 22 },
+{ id: 17, name: 'Грибы', emoji: '🍄', lvl: 6, price: 19 },
+{ id: 18, name: 'Лимон', emoji: '🍋', lvl: 7, price: 14 },
+{ id: 19, name: 'Яблоко', emoji: '🍎', lvl: 7, price: 12 },
+{ id: 20, name: 'Шоколад', emoji: '🍫', lvl: 8, price: 35 },
+{ id: 21, name: 'Мед', emoji: '🍯', lvl: 8, price: 40 },
+{ id: 22, name: 'Креветка', emoji: '🦐', lvl: 9, price: 45 },
+{ id: 23, name: 'Чили', emoji: '🌶️', lvl: 10, price: 20 },
+{ id: 24, name: 'Трюфель', emoji: '💎', lvl: 12, price: 150 },
+{ id: 25, name: 'Золотой лист', emoji: '✨', lvl: 15, price: 500 },
+{ id: 101, name: 'Тесто', emoji: '🥣', isCrafted: true },
+{ id: 102, name: 'Бульон', emoji: '🍲', isCrafted: true },
+{ id: 103, name: 'Сироп', emoji: '🍭', isCrafted: true }
+];
+
+const generateRecipes = () => {
+  // Уникальные рецепты - убраны все дубликаты с одинаковыми ингредиентами
+  const recipes = [
+    { id: 1, name: 'Лепёшка', result: '🫓', ings: [1, 2], price: 25, rarity: 'common' },
+    { id: 2, name: 'Пончик', result: '🍩', ings: [1, 4], price: 30, rarity: 'common' },
+    { id: 3, name: 'Картофельные оладьи', result: '🥞', ings: [1, 4, 5], price: 40, rarity: 'uncommon' },
+    { id: 4, name: 'Тесто', result: '🥣', ings: [1, 9], price: 20, rarity: 'common', craftedIngId: 101 },
+    { id: 5, name: 'Оладьи', result: '🥞', ings: [1, 9], price: 35, rarity: 'common' },
+    { id: 6, name: 'Солёная вода', result: '💧', ings: [2, 3], price: 10, rarity: 'common' },
+    { id: 7, name: 'Сахарный сироп', result: '🍭', ings: [2, 4], price: 18, rarity: 'common', craftedIngId: 103 },
+    { id: 8, name: 'Солёная картошка', result: '🥔', ings: [2, 5], price: 22, rarity: 'common' },
+    { id: 9, name: 'Аджика', result: '🍅', ings: [2, 6], price: 25, rarity: 'common' },
+    { id: 10, name: 'Маринованные огурчики', result: '🥒', ings: [2, 3, 7], price: 30, rarity: 'common' },
+    { id: 11, name: 'Квашеная морковь', result: '🥕', ings: [2, 8], price: 25, rarity: 'common' },
+    { id: 12, name: 'Солёное мясо', result: '🥩', ings: [2, 12], price: 40, rarity: 'uncommon' },
+    { id: 13, name: 'Вяленая рыба', result: '🐟', ings: [2, 14], price: 38, rarity: 'uncommon' },
+    { id: 14, name: 'Картофельный суп', result: '🍲', ings: [3, 5], price: 15, rarity: 'common' },
+    { id: 15, name: 'Варёный рис', result: '🍚', ings: [3, 15], price: 25, rarity: 'common' },
+    { id: 16, name: 'Томатный суп', result: '🍲', ings: [3, 6], price: 18, rarity: 'common' },
+    { id: 17, name: 'Окрошка', result: '🥗', ings: [3, 7], price: 16, rarity: 'common' },
+    { id: 18, name: 'Морковный суп', result: '🍲', ings: [3, 8], price: 17, rarity: 'common' },
+    { id: 19, name: 'Куриный бульон', result: '🍲', ings: [3, 13], price: 35, rarity: 'uncommon' },
+    { id: 20, name: 'Мясной бульон', result: '🍲', ings: [3, 12], price: 40, rarity: 'uncommon', craftedIngId: 102 },
+    { id: 21, name: 'Рыбный суп', result: '🍲', ings: [3, 14], price: 38, rarity: 'uncommon' },
+    { id: 22, name: 'Яичный суп', result: '🍲', ings: [3, 9], price: 20, rarity: 'common' },
+    { id: 23, name: 'Молочный суп', result: '🍲', ings: [3, 10], price: 22, rarity: 'common' },
+    { id: 24, name: 'Сырный суп', result: '🍲', ings: [3, 16], price: 45, rarity: 'uncommon' },
+    { id: 25, name: 'Грибной суп', result: '🍲', ings: [3, 17], price: 42, rarity: 'uncommon' },
+    { id: 26, name: 'Плов', result: '🍛', ings: [3, 15, 12], price: 55, rarity: 'rare' },
+    { id: 27, name: 'Щи мясные', result: '🍲', ings: [3, 5, 12], price: 50, rarity: 'rare' },
+    { id: 28, name: 'Мясо с томатом', result: '🥘', ings: [3, 6, 12], price: 48, rarity: 'rare' },
+    { id: 29, name: 'Сладкий сироп', result: '🍹', ings: [4, 3], price: 12, rarity: 'common' },
+    { id: 30, name: 'Сахарное печенье', result: '🍪', ings: [4, 1], price: 18, rarity: 'common' },
+    { id: 31, name: 'Молоко с сахаром', result: '☕', ings: [4, 10], price: 25, rarity: 'common' },
+    { id: 32, name: 'Сладкий омлет', result: '🍳', ings: [4, 9], price: 22, rarity: 'common' },
+    { id: 33, name: 'Сахарная карамель', result: '🍭', ings: [4, 11], price: 28, rarity: 'uncommon' },
+    { id: 34, name: 'Яблочный пирог', result: '🥧', ings: [4, 19], price: 40, rarity: 'uncommon' },
+    { id: 35, name: 'Лимонад', result: '🍹', ings: [4, 18], price: 35, rarity: 'uncommon' },
+    { id: 36, name: 'Шоколадный батончик', result: '🍫', ings: [4, 20], price: 60, rarity: 'rare' },
+    { id: 37, name: 'Медовый десерт', result: '🍯', ings: [4, 21], price: 65, rarity: 'rare' },
+    { id: 38, name: 'Блины сладкие', result: '🥞', ings: [4, 1, 9], price: 30, rarity: 'uncommon' },
+    { id: 39, name: 'Рисовый пудинг', result: '🍮', ings: [4, 15, 10], price: 45, rarity: 'uncommon' },
+    { id: 40, name: 'Сладкая картошка', result: '🍠', ings: [4, 5], price: 20, rarity: 'common' },
+    { id: 41, name: 'Глазунья', result: '🍳', ings: [2, 9], price: 35, rarity: 'common' },
+    { id: 42, name: 'Вареное яйцо', result: '🥚', ings: [3, 9], price: 30, rarity: 'common' },
+    { id: 43, name: 'Молоко с медом', result: '🥛', ings: [10, 21], price: 75, rarity: 'uncommon' },
+    { id: 44, name: 'Травяной отвар', result: '🍵', ings: [3, 17], price: 40, rarity: 'common' },
+    { id: 45, name: 'Картофельные дольки', result: '🍟', ings: [5, 2], price: 35, rarity: 'common' },
+    { id: 46, name: 'Хлеб', result: '🍞', ings: [1, 3, 2], price: 30, rarity: 'common' },
+    { id: 47, name: 'Гренки', result: '🥖', ings: [1, 2, 11], price: 45, rarity: 'uncommon' },
+    { id: 48, name: 'Картофельное пюре', result: '🥣', ings: [3, 5, 2], price: 35, rarity: 'common' },
+    { id: 49, name: 'Блинчики с солью', result: '🥞', ings: [1, 2, 3], price: 30, rarity: 'common' },
+    { id: 50, name: 'Мучной суп', result: '🍲', ings: [1, 3], price: 20, rarity: 'common' },
+    { id: 51, name: 'Домашняя лапша', result: '🍜', ings: [101, 102], price: 85, rarity: 'rare' },
+    { id: 52, name: 'Сырные палочки', result: '🥖', ings: [101, 16], price: 95, rarity: 'rare' },
+    { id: 53, name: 'Мясной пирог', result: '🥧', ings: [101, 12, 2], price: 140, rarity: 'epic' },
+    { id: 54, name: 'Куриный пирог', result: '🥧', ings: [101, 13, 2], price: 130, rarity: 'epic' },
+    { id: 55, name: 'Рыбный пирог', result: '🥧', ings: [101, 14, 2], price: 135, rarity: 'epic' },
+    { id: 56, name: 'Яблочный штрудель', result: '🥐', ings: [101, 19, 4], price: 110, rarity: 'rare' },
+    { id: 57, name: 'Грибной киш', result: '🥮', ings: [101, 17, 16], price: 150, rarity: 'epic' },
+    { id: 58, name: 'Шоколадный круассан', result: '🥐', ings: [101, 20, 11], price: 125, rarity: 'rare' },
+    { id: 59, name: 'Медовая булочка', result: '🥯', ings: [101, 21], price: 90, rarity: 'rare' },
+    { id: 60, name: 'Пицца Маргарита', result: '🍕', ings: [101, 6, 16], price: 160, rarity: 'epic' },
+    { id: 61, name: 'Борщ классический', result: '🥣', ings: [102, 8, 12, 6], price: 220, rarity: 'epic' },
+    { id: 62, name: 'Солянка', result: '🍲', ings: [102, 12, 7, 6, 2], price: 250, rarity: 'epic' },
+    { id: 63, name: 'Уха царская', result: '🍲', ings: [102, 14, 5, 2], price: 190, rarity: 'rare' },
+    { id: 64, name: 'Грибной крем-суп', result: '🥣', ings: [102, 17, 10], price: 165, rarity: 'rare' },
+    { id: 65, name: 'Острый суп чили', result: '🌶️', ings: [102, 23, 12], price: 210, rarity: 'epic' },
+    { id: 66, name: 'Сырный крем-суп', result: '🥣', ings: [102, 16, 10, 11], price: 185, rarity: 'rare' },
+    { id: 67, name: 'Рамен с яйцом', result: '🍜', ings: [102, 101, 9], price: 170, rarity: 'epic' },
+    { id: 68, name: 'Суп с креветками', result: '🦐', ings: [102, 22, 18], price: 320, rarity: 'epic' },
+    { id: 69, name: 'Трюфельный бульон', result: '💎', ings: [102, 24], price: 650, rarity: 'legendary' },
+    { id: 70, name: 'Золотой суп', result: '✨', ings: [102, 25], price: 1500, rarity: 'legendary' },
+    { id: 71, name: 'Глазированные яблоки', result: '🍎', ings: [103, 19], price: 110, rarity: 'rare' },
+    { id: 72, name: 'Карамельный попкорн', result: '🍿', ings: [103, 11, 4], price: 95, rarity: 'rare' },
+    { id: 73, name: 'Медовая карамель', result: '🍯', ings: [103, 21], price: 145, rarity: 'rare' },
+    { id: 74, name: 'Шоколадная глазурь', result: '🍫', ings: [103, 20], price: 180, rarity: 'epic' },
+    { id: 75, name: 'Лимонный сорбет', result: '🍧', ings: [103, 18, 3], price: 130, rarity: 'rare' },
+    { id: 76, name: 'Ягодный мусс', result: '🧁', ings: [103, 10, 4], price: 115, rarity: 'rare' },
+    { id: 77, name: 'Сладкий рис в сиропе', result: '🥣', ings: [103, 15], price: 105, rarity: 'rare' },
+    { id: 78, name: 'Креветки в карамели', result: '🦐', ings: [103, 22, 23], price: 350, rarity: 'epic' },
+    { id: 79, name: 'Трюфельный десерт', result: '🍮', ings: [103, 24, 20], price: 850, rarity: 'legendary' },
+    { id: 80, name: 'Золотой нектар', result: '🍷', ings: [103, 25, 18], price: 2200, rarity: 'legendary' },
+    { id: 81, name: 'Макароны с маслом', result: '🍝', ings: [1, 11, 3], price: 40, rarity: 'common' },
+    { id: 82, name: 'Сырники', result: '🥞', ings: [16, 1, 9], price: 60, rarity: 'uncommon' },
+    { id: 83, name: 'Греческий салат', result: '🥗', ings: [6, 7, 16], price: 55, rarity: 'uncommon' },
+    { id: 84, name: 'Жареная рыба', result: '🐟', ings: [14, 11], price: 50, rarity: 'uncommon' },
+    { id: 85, name: 'Жареное мясо', result: '🥩', ings: [12, 11], price: 55, rarity: 'uncommon' },
+    { id: 86, name: 'Жареная курица', result: '🍗', ings: [13, 11], price: 48, rarity: 'uncommon' },
+    { id: 87, name: 'Омлет', result: '🍳', ings: [9, 10, 11], price: 40, rarity: 'uncommon' },
+    { id: 88, name: 'Молочная каша', result: '🥣', ings: [15, 10, 4], price: 45, rarity: 'uncommon' },
+    { id: 89, name: 'Грибы жареные', result: '🍄', ings: [17, 11], price: 45, rarity: 'uncommon' },
+    { id: 90, name: 'Картофель фри', result: '🍟', ings: [5, 11], price: 38, rarity: 'uncommon' },
+    { id: 91, name: 'Яблоко в карамели', result: '🍎', ings: [19, 4], price: 32, rarity: 'common' },
+    { id: 92, name: 'Лимонный пирог', result: '🥧', ings: [18, 1, 4], price: 50, rarity: 'uncommon' },
+    { id: 93, name: 'Шоколадный торт', result: '🍰', ings: [20, 1, 9, 10], price: 120, rarity: 'rare' },
+    { id: 94, name: 'Медовик', result: '🍰', ings: [21, 1, 9], price: 95, rarity: 'rare' },
+    { id: 95, name: 'Креветки жареные', result: '🦐', ings: [22, 11], price: 80, rarity: 'rare' },
+    { id: 96, name: 'Острый соус', result: '🌶️', ings: [23, 6], price: 35, rarity: 'uncommon' },
+    { id: 97, name: 'Трюфельная паста', result: '💎', ings: [24, 1, 11], price: 220, rarity: 'legendary' },
+    { id: 98, name: 'Золотое мороженое', result: '🍦', ings: [25, 10, 4], price: 800, rarity: 'legendary' },
+    { id: 99, name: 'Рис с овощами', result: '🍛', ings: [15, 8, 5], price: 48, rarity: 'uncommon' },
+    { id: 100, name: 'Овощной суп', result: '🍲', ings: [3, 8, 5, 6], price: 42, rarity: 'uncommon' },
+    { id: 101, name: 'Салат Цезарь', result: '🥗', ings: [1, 13, 16], price: 75, rarity: 'rare' },
+    { id: 102, name: 'Бургер', result: '🍔', ings: [1, 12, 6], price: 85, rarity: 'rare' },
+    { id: 103, name: 'Шашлык', result: '🍢', ings: [12, 2], price: 65, rarity: 'uncommon' },
+    { id: 104, name: 'Пельмени', result: '🥟', ings: [1, 12, 2], price: 70, rarity: 'rare' },
+    { id: 105, name: 'Пирожки с мясом', result: '🥟', ings: [1, 12, 9], price: 75, rarity: 'rare' },
+    { id: 106, name: 'Пирожки с капустой', result: '🥟', ings: [1, 8, 2], price: 45, rarity: 'uncommon' },
+    { id: 107, name: 'Вареники с творогом', result: '🥟', ings: [1, 16, 4], price: 60, rarity: 'uncommon' },
+    { id: 108, name: 'Чебуреки', result: '🥟', ings: [1, 12, 11], price: 80, rarity: 'rare' },
+    { id: 109, name: 'Манты', result: '🥟', ings: [1, 12, 5], price: 85, rarity: 'rare' },
+    { id: 110, name: 'Хинкали', result: '🥟', ings: [1, 12, 2, 3], price: 90, rarity: 'rare' },
+    { id: 111, name: 'Паста Карбонара', result: '🍝', ings: [1, 9, 16], price: 95, rarity: 'rare' },
+    { id: 112, name: 'Паста Болоньезе', result: '🍝', ings: [1, 12, 6], price: 100, rarity: 'rare' },
+    { id: 113, name: 'Ризотто', result: '🍚', ings: [15, 16, 11], price: 110, rarity: 'rare' },
+    { id: 114, name: 'Суши', result: '🍣', ings: [14, 15], price: 85, rarity: 'rare' },
+    { id: 115, name: 'Роллы', result: '🍱', ings: [14, 15, 7], price: 95, rarity: 'rare' },
+    { id: 116, name: 'Тако', result: '🌮', ings: [1, 12, 6], price: 70, rarity: 'uncommon' },
+    { id: 117, name: 'Буррито', result: '🌯', ings: [1, 12, 15], price: 80, rarity: 'rare' },
+    { id: 118, name: 'Начос', result: '🧀', ings: [1, 16, 23], price: 55, rarity: 'uncommon' },
+    { id: 119, name: 'Французский багет', result: '🥖', ings: [1, 2, 3], price: 35, rarity: 'common' },
+    { id: 120, name: 'Круассан', result: '🥐', ings: [1, 11, 4], price: 50, rarity: 'uncommon' },
+    { id: 121, name: 'Маффин', result: '🧁', ings: [1, 4, 9], price: 40, rarity: 'uncommon' },
+    { id: 122, name: 'Печенье', result: '🍪', ings: [1, 11, 4], price: 35, rarity: 'common' },
+    { id: 123, name: 'Пряник', result: '🍪', ings: [1, 21, 4], price: 55, rarity: 'uncommon' },
+    { id: 124, name: 'Вафли', result: '🧇', ings: [1, 9, 4], price: 45, rarity: 'uncommon' },
+    { id: 125, name: 'Панкейки', result: '🥞', ings: [1, 10, 9], price: 50, rarity: 'uncommon' },
+    { id: 126, name: 'Тирамису', result: '🍰', ings: [1, 16, 20], price: 130, rarity: 'epic' },
+    { id: 127, name: 'Чизкейк', result: '🍰', ings: [16, 4, 9], price: 95, rarity: 'rare' },
+    { id: 128, name: 'Панна-котта', result: '🍮', ings: [10, 4], price: 60, rarity: 'uncommon' },
+    { id: 129, name: 'Крем-брюле', result: '🍮', ings: [10, 9, 4], price: 75, rarity: 'rare' },
+    { id: 130, name: 'Эклер', result: '🥐', ings: [1, 10, 20], price: 85, rarity: 'rare' },
+    { id: 131, name: 'Безе', result: '🍥', ings: [9, 4], price: 35, rarity: 'common' },
+    { id: 132, name: 'Мармелад', result: '🍬', ings: [4, 18], price: 50, rarity: 'uncommon' },
+    { id: 133, name: 'Горячий шоколад', result: '☕', ings: [20, 10], price: 60, rarity: 'uncommon' },
+  ];
+
+  // Присваиваем ID по порядку
+  return recipes.map((r, index) => ({ ...r, id: index + 1 }));
+};
+
+const ALL_RECIPES = generateRecipes();
+
+let state = {
+level: 1,
+coins: 100,
+inventory: {},
+products: {},
+unlocked: [],
+cauldron: [],
+shopItems: [],
+shopResetTime: 0,
+lastIncomeTime: Date.now()
+};
+
+const saved = localStorage.getItem('foodcraft_v6');
+if (saved) {
+state = JSON.parse(saved);
+} else {
+ALL_INGREDIENTS.forEach(i => state.inventory[i.id] = 0);
+generateShop();
+}
+
+function saveState() {
+localStorage.setItem('foodcraft_v6', JSON.stringify(state));
+updateUI();
+}
+
+function getInterval() {
+const reduction = (state.level - 1) * 30000;
+return Math.max(300000, 600000 - reduction);
+}
+
+function generateShop() {
+const availableIngs = ALL_INGREDIENTS.filter(i => i.lvl <= state.level && !i.isCrafted);
+const shuffled = availableIngs.sort(() => 0.5 - Math.random());
+state.shopItems = shuffled.slice(0, 25).map(i => ({
+id: i.id,
+stock: Math.floor(Math.random() * 4) + 2
+}));
+state.shopResetTime = Date.now() + getInterval();
+saveState();
+}
+
+function checkIntervals() {
+const now = Date.now();
+const interval = getInterval();
+if (now > state.shopResetTime) {
+generateShop();
+showToast('🛒 Магазин обновлен!');
+if(document.getElementById('tab-shop').classList.contains('active')) renderShop();
+}
+if (now - state.lastIncomeTime >= interval) {
+const reward = state.level * 25;
+state.coins += reward;
+state.lastIncomeTime = now;
+saveState();
+showToast(`💸 Доход: +${reward} монет!`);
+}
+}
+
+function showToast(msg) {
+const t = document.getElementById('toast');
+t.textContent = msg;
+t.classList.add('show');
+setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateUI() {
+document.getElementById('ui-level').textContent = state.level;
+document.getElementById('ui-coins').textContent = Math.floor(state.coins);
+document.getElementById('recipe-progress').textContent = state.unlocked.length;
+}
+
+function toggleModal(show) {
+document.getElementById('help-modal').classList.toggle('show', show);
+}
+
+function switchTab(tab) {
+document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+document.getElementById(`tab-${tab}`).classList.add('active');
+document.querySelector(`.nav-tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+if (tab === 'craft') { renderInventory(); renderCauldron(); }
+else if (tab === 'shop') { renderShop(); renderSellGrid(); }
+else if (tab === 'recipes') { renderRecipes(); }
+}
+
+function renderInventory() {
+const grid = document.getElementById('inventory-grid');
+grid.innerHTML = '';
+ALL_INGREDIENTS.forEach(ing => {
+if (ing.lvl > state.level + 1 && !ing.isCrafted) return;
+const count = state.inventory[ing.id] || 0;
+if (ing.isCrafted && count === 0) return; // Don't show crafted ingredients if 0
+
+const inCauldron = state.cauldron.includes(ing.id);
+const div = document.createElement('div');
+div.className = `item-card ${count === 0 ? 'locked' : ''} ${inCauldron ? 'selected' : ''}`;
+div.onclick = () => {
+if (count > 0 && !inCauldron) {
+if (state.cauldron.length < 9) {
+state.cauldron.push(ing.id);
+state.inventory[ing.id]--;
+saveState(); renderInventory(); renderCauldron();
+} else showToast('Котёл переполнен!');
+} else if (inCauldron) {
+state.cauldron = state.cauldron.filter(id => id !== ing.id);
+state.inventory[ing.id]++;
+saveState(); renderInventory(); renderCauldron();
+}
+};
+div.innerHTML = `<div class="item-emoji">${ing.emoji}</div><div class="item-name">${ing.name}</div><div class="item-count ${count===0?'item-zero':''}">${count} шт</div>`;
+grid.appendChild(div);
+});
+}
+
+function renderCauldron() {
+const c = document.getElementById('cauldron');
+c.innerHTML = '';
+for (let i = 0; i < 9; i++) {
+const slotId = state.cauldron[i];
+const div = document.createElement('div');
+div.className = `c-slot ${slotId ? 'filled' : ''}`;
+if (slotId) {
+const ing = ALL_INGREDIENTS.find(x => x.id === slotId);
+div.textContent = ing.emoji;
+div.onclick = () => {
+state.cauldron = state.cauldron.filter(id => id !== slotId);
+state.inventory[slotId]++;
+saveState(); renderInventory(); renderCauldron();
+}
+}
+c.appendChild(div);
+}
+document.getElementById('btn-craft').disabled = state.cauldron.length < 2;
+}
+
+function doCraft() {
+const cauldronIngs = [...state.cauldron].sort();
+let crafted = ALL_RECIPES.find(r => JSON.stringify([...r.ings].sort()) === JSON.stringify(cauldronIngs));
+if (crafted) {
+if (crafted.craftedIngId) {
+// Result is an intermediate ingredient
+state.inventory[crafted.craftedIngId] = (state.inventory[crafted.craftedIngId] || 0) + 1;
+showToast(`🥣 Изготовлено: ${crafted.name}!`);
+} else {
+// Result is a sellable product
+state.products[crafted.id] = (state.products[crafted.id] || 0) + 1;
+showToast(`✨ ${crafted.result} ${crafted.name}!`);
+}
+
+if (!state.unlocked.includes(crafted.id)) {
+state.unlocked.push(crafted.id);
+state.level = Math.floor(state.unlocked.length / 8) + 1;
+}
+state.cauldron = [];
+} else {
+showToast('🤢 Хм, не вышло... Ингредиенты возвращены.');
+state.cauldron.forEach(id => { state.inventory[id]++; });
+state.cauldron = [];
+}
+saveState(); renderCauldron(); renderInventory();
+}
+
+function renderShop() {
+const grid = document.getElementById('shop-grid');
+grid.innerHTML = '';
+state.shopItems.forEach(item => {
+const ing = ALL_INGREDIENTS.find(i => i.id === item.id);
+const div = document.createElement('div');
+const canBuy = item.stock > 0 && state.coins >= ing.price;
+div.className = `item-card ${!canBuy ? 'locked' : ''}`;
+div.onclick = () => {
+if (canBuy) {
+state.coins -= ing.price; item.stock--;
+state.inventory[ing.id] = (state.inventory[ing.id] || 0) + 1;
+saveState(); renderShop();
+} else if (state.coins < ing.price) showToast('🪙 Мало монет!');
+};
+div.innerHTML = `<div class="item-emoji">${ing.emoji}</div><div class="item-name">${ing.name}</div><div class="item-price">🪙 ${ing.price}</div><div class="item-stock">Запас: ${item.stock}</div>`;
+grid.appendChild(div);
+});
+}
+
+function renderSellGrid() {
+const grid = document.getElementById('sell-grid'); grid.innerHTML = '';
+let has = false;
+for (const [id, count] of Object.entries(state.products)) {
+if (count > 0) {
+has = true; const r = ALL_RECIPES.find(x => x.id == id);
+const div = document.createElement('div'); div.className = 'item-card';
+div.onclick = () => {
+state.coins += r.price; state.products[id]--;
+saveState(); renderSellGrid(); showToast(`🪙 +${r.price}`);
+};
+div.innerHTML = `<div class="rarity-label" style="background:var(--rarity-${r.rarity});color:white">${r.rarity}</div><div class="item-emoji">${r.result}</div><div class="item-name">${r.name}</div><div class="item-count">${count} шт</div><div class="item-price">🪙 ${r.price}</div>`;
+grid.appendChild(div);
+}
+}
+if(!has) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--hint)">Нет блюд на продажу</div>';
+}
+
+const RARITY_NAMES = { common: 'Обычное', uncommon: 'Необычное', rare: 'Редкое', epic: 'Эпическое', legendary: 'Легендарное' };
+
+function renderRecipes() {
+const list = document.getElementById('recipes-list'); list.innerHTML = '';
+// Сортируем рецепты: обычные -> необычные -> редкие -> эпические -> легендарные
+const rarityOrder = { 'common': 1, 'uncommon': 2, 'rare': 3, 'epic': 4, 'legendary': 5 };
+const sortedRecipes = [...ALL_RECIPES].sort((a, b) => rarityOrder[a.rarity] - rarityOrder[b.rarity]);
+
+// Проверяем состояние чекбокса
+const hideUnlocked = document.getElementById('hide-unlocked-checkbox').checked;
+
+sortedRecipes.forEach(r => {
+const is = state.unlocked.includes(r.id);
+  
+// Если чекбокс включен и рецепт открыт - пропускаем
+if (hideUnlocked && is) return;
+
+const div = document.createElement('div');
+div.className = `recipe-row ${r.rarity}`;
+const rarityLabel = `<div class="rarity-label" style="background:var(--rarity-${r.rarity});color:white">${RARITY_NAMES[r.rarity]}</div>`;
+if (is) {
+const txt = r.ings.map(id => ALL_INGREDIENTS.find(i => i.id === id).emoji).join(' + ');
+div.innerHTML = `<div class="recipe-result">${r.result}</div><div class="recipe-info">${rarityLabel}<div class="recipe-name">${r.name}</div><div class="recipe-ings">${txt}</div></div><div class="item-price">${r.craftedIngId ? '🛠️ Ресурс' : '🪙 ' + r.price}</div>`;
+} else {
+const hintIng = ALL_INGREDIENTS.find(i => i.id === r.ings[0]);
+div.innerHTML = `<div class="recipe-result" style="opacity:0.2">${r.result}</div><div class="recipe-info">${rarityLabel}<div class="recipe-name">${r.name}</div><div class="recipe-hint">Нужно ${r.ings.length} ингр. Один из них: ${hintIng.name}</div></div>`;
+}
+list.appendChild(div);
+});
+}
+
+setInterval(() => {
+checkIntervals();
+const diff = Math.max(0, state.shopResetTime - Date.now());
+const min = Math.floor(diff / 60000); const sec = Math.floor((diff % 60000) / 1000);
+const el = document.getElementById('shop-timer');
+if(el) el.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+}, 1000);
+
+updateUI(); switchTab('craft');
+</script>
+</body>
+</html>
